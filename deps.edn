@@ -1,0 +1,10 @@
+; The use and distribution terms for this software are covered by the
+; Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+; which can be found in the file epl-v10.html at the root of this distribution.
+; By using this software in any fashion, you are agreeing to be bound by the terms of this license.
+
+{:deps    {org.clojure/clojure                 {:mvn/version "1.10.3"}
+           io.swagger.parser.v3/swagger-parser {:mvn/version "2.0.24"}}
+ :aliases {:test {:extra-deps {lambdaisland/kaocha    {:mvn/version "1.0.732"}
+                               org.clojure/test.check {:mvn/version "1.1.0"}}
+                  :main-opts  ["-m" "kaocha.runner" "--reporter" "kaocha.report.progress/report"]}}}
