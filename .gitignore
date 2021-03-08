@@ -1,6 +1,7 @@
 .cpcache/
 *.jar
 pom.xml
+pom.xml.asc
 .nrepl-port
 .lsp/
 .DS_Store
