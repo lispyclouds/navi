@@ -130,7 +130,7 @@ A clojure map of OperationId to handler fns:
 
 Generate the routes:
 ```clojure
-(require '[org.clojars.lispyclouds/navi.core :as navi])
+(require '[navi.core :as navi])
 
 (navi/routes-from (slurp "api.yaml") handlers)
 =>
