@@ -136,23 +136,6 @@ Generate the routes:
 =>
 [["/add/{n1}/{n2}"
   {:get
-   {:handler nil,
-    :parameters
-    {:path
-     [:map
-      [:n1 #function[clojure.core/int?]]
-      [:n2 #function[clojure.core/int?]]]}},
-   :post
-   {:handler nil,
-    :parameters
-    {:body
-     [:map
-      {:closed false}
-      [:n1 #function[clojure.core/int?]]
-      [:n2 #function[clojure.core/int?]]]}}}]
- ["/health" {:get {:handler nil}}]]
-[["/add/{n1}/{n2}"
-  {:get
    {:handler #function[navi.core/fn--8260],
     :parameters
     {:path
