@@ -1,4 +1,4 @@
-# navi
+# navi [![](https://github.com/lispyclouds/navi/workflows/Test/badge.svg)](https://github.com/lispyclouds/navi/actions?query=workflow%3ATest)
 
 A tiny library converting [OpenAPI](https://www.openapis.org/) route definitions to [Reitit](https://cljdoc.org/jump/release/metosin/reitit) routes.
 

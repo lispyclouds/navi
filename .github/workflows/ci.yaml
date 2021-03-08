@@ -1,0 +1,37 @@
+# The use and distribution terms for this software are covered by the
+# Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+# which can be found in the file epl-v10.html at the root of this distribution.
+# By using this software in any fashion, you are agreeing to be bound by the terms of this license.
+
+name: Tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@v2"
+
+      - name: "Prepare Java"
+        uses: "actions/setup-java@v1"
+        with:
+          java-version: "15"
+
+      - name: "Prepare tools-deps"
+        uses: "DeLaGuardo/setup-clojure@master"
+        with:
+          cli: '1.10.2.796'
+
+      - name: "Apply Cache"
+        uses: "actions/cache@v2"
+        with:
+          path: |
+            ~/.m2/repository
+          key: "${{ runner.os }}-navi-${{ hashFiles('deps.edn') }}"
+          restore-keys: "${{ runner.os }}-navi-"
+
+      - name: "Run tests"
+        run: "clojure -M:test"
