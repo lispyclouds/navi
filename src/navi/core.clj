@@ -13,7 +13,7 @@
 
 (declare spec)
 
-;; TODO: 🤮 -> 🤢
+;; TODO: Better
 (defn wrap-map
   "Surrounds the key in a map for malli conformance"
   [k m]
@@ -23,7 +23,7 @@
                #(into [:map] %))
     m))
 
-;; TODO: 🤮 -> 🤢
+;; TODO: Better
 (defn ->prop-schema
   "Given a property and a required keys set, returns a malli spec.
    Intended for RequestBody"
@@ -88,7 +88,7 @@
 
 (defmulti param->data class)
 
-;; TODO: 🤮🤮 -> 🤢 The extra [] is there to help with merge-with into
+;; TODO: Better. The extra [] is there to help with merge-with into
 (defmethod param->data
   PathParameter
   [param]
