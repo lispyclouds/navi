@@ -153,6 +153,47 @@ Generate the routes:
  ["/health" {:get {:handler #function[navi.core/fn--8271]}}]]
 ```
 
+Bootstrapping a Jetty server:
+```clojure
+(ns server
+  (:require [muuntaja.core :as m]
+            [reitit.ring :as ring]
+            [reitit.http :as http]
+            [reitit.coercion.malli :as malli]
+            [reitit.http.coercion :as coercion]
+            [reitit.http.interceptors.parameters :as parameters]
+            [reitit.http.interceptors.muuntaja :as muuntaja]
+            [reitit.interceptor.sieppari :as sieppari]
+            [ring.adapter.jetty :as jetty]
+            [navi.core :as navi]))
+
+(def server
+  (http/ring-handler
+    (http/router (-> "api.yaml"
+                     slurp
+                     (navi/routes-from handlers)) ; handlers is the map described before
+                 {:data {:coercion     malli/coercion
+                         :muuntaja     m/instance
+                         :interceptors [(parameters/parameters-interceptor)
+                                        (muuntaja/format-negotiate-interceptor)
+                                        (muuntaja/format-response-interceptor)
+                                        (muuntaja/format-request-interceptor)
+                                        (coercion/coerce-response-interceptor)
+                                        (coercion/coerce-request-interceptor)]}})
+    (ring/routes
+      (ring/create-default-handler
+        {:not-found (constantly {:status  404
+                                 :headers {"Content-Type" "application/json"}
+                                 :body    "{\"message\": \"Took a wrong turn?\"}"})}))
+    {:executor sieppari/executor}))
+
+(jetty/run-jetty (var server)
+                 {:host   "0.0.0.0"
+                  :port   7777
+                  :join?  false
+                  :async? true})
+```
+
 ### Build Requirements
 - JDK 8+
 - Clojure [tools.deps](https://clojure.org/guides/getting_started)
