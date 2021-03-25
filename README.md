@@ -30,17 +30,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.0.1"]
+[org.clojars.lispyclouds/navi "0.0.2"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.0.1"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.0.2"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.0.1'
+compile 'org.clojars.lispyclouds:navi:0.0.2'
 ```
 
 Maven
@@ -48,7 +48,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
 </dependency>
 ```
 
