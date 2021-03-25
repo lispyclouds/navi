@@ -86,14 +86,34 @@
                   (.setSchema (IntegerSchema.)))]
       (is (= {:query [[:x int?]]}
              (core/param->data param)))))
-  (testing "request body"
+  (testing "required request body"
+    (let [media   (doto (MediaType.)
+                    (.setSchema (ObjectSchema.)))
+          content (doto (Content.)
+                    (.put "application/json" media))
+          param   (doto (RequestBody.)
+                    (.setRequired true)
+                    (.setContent content))]
+      (is (= {:body [:map {:closed false}]}
+             (core/param->data param)))))
+  (testing "optional request body"
+    (let [media   (doto (MediaType.)
+                    (.setSchema (ObjectSchema.)))
+          content (doto (Content.)
+                    (.put "application/json" media))
+          param   (doto (RequestBody.)
+                    (.setRequired false)
+                    (.setContent content))]
+      (is (= {:body [:or nil? [:map {:closed false}]]}
+             (core/param->data param)))))
+  (testing "implicitly optional request body"
     (let [media   (doto (MediaType.)
                     (.setSchema (ObjectSchema.)))
           content (doto (Content.)
                     (.put "application/json" media))
           param   (doto (RequestBody.)
                     (.setContent content))]
-      (is (= {:body [:map {:closed false}]}
+      (is (= {:body [:or nil? [:map {:closed false}]]}
              (core/param->data param))))))
 
 (deftest openapi-operation-to-malli-spec

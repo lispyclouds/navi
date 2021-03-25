@@ -108,10 +108,14 @@
                                .values
                                .stream
                                .findFirst
-                               .get)]
-    {:body (-> content
-               .getSchema
-               spec)}))
+                               .get)
+        body-spec          (-> content
+                               .getSchema
+                               spec)
+        maybe-body         (if (.getRequired param)
+                             body-spec
+                             [:or nil? body-spec])]
+    {:body maybe-body}))
 
 (defn operation->data
   "Converts an Operation to map of parameters, schemas and handler conforming to reitit"
@@ -176,6 +180,6 @@
                      {:status 200
                       :body   "Ok"})})
   (-> "api.yaml"
-    slurp
-    (routes-from handlers)
-    pp/pprint))
+      slurp
+      (routes-from handlers)
+      pp/pprint))
