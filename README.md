@@ -119,10 +119,10 @@ A clojure map of OperationId to handler fns:
 (def handlers
   {"AddGet"      (fn [{{{:keys [n1 n2]} :path} :parameters}]
                    {:status 200
-                    :body   (+ n1 n2)})
+                    :body   (str (+ n1 n2))})
    "AddPost"     (fn [{{{:keys [n1 n2]} :body} :parameters}]
                    {:status 200
-                    :body   (+ n1 n2)})
+                    :body   (str (+ n1 n2))})
    "HealthCheck" (fn [_]
                    {:status 200
                     :body   "Ok"})})
@@ -192,6 +192,20 @@ Bootstrapping a Jetty server:
                   :port   7777
                   :join?  false
                   :async? true})
+```
+
+deps.edn used for this example:
+```edn
+{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.2"}
+        metosin/reitit-core          {:mvn/version "0.5.12"}
+        metosin/reitit-http          {:mvn/version "0.5.12"}
+        metosin/reitit-interceptors  {:mvn/version "0.5.12"}
+        metosin/reitit-malli         {:mvn/version "0.5.12"}
+        metosin/reitit-ring          {:mvn/version "0.5.12"}
+        metosin/reitit-sieppari      {:mvn/version "0.5.12"}
+        metosin/reitit-middleware    {:mvn/version "0.5.12"}
+        metosin/muuntaja             {:mvn/version "0.6.8"}
+        ring/ring-jetty-adapter      {:mvn/version "1.9.2"}}}
 ```
 
 ### Build Requirements
