@@ -5,12 +5,16 @@
 
 (ns navi.core
   (:import [java.util Map$Entry]
-           [io.swagger.v3.oas.models.media StringSchema
+           [io.swagger.v3.oas.models.media Schema
+                                           StringSchema
                                            IntegerSchema
                                            ObjectSchema
                                            ArraySchema
+                                           MapSchema
                                            NumberSchema
                                            BooleanSchema
+                                           DateSchema
+                                           DateTimeSchema
                                            MediaType]
            [io.swagger.v3.oas.models.parameters PathParameter
                                                 QueryParameter
@@ -18,6 +22,8 @@
                                                 Parameter]
            [io.swagger.v3.oas.models Operation
                                      PathItem]
+           [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]
+           [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
@@ -106,6 +112,34 @@
        any?
        (spec items))]))
 
+(defmethod spec
+  Schema
+  [^ObjectSchema schema]
+  schema)
+
+(defmethod spec
+  MapSchema
+  [^MapSchema schema]
+  (let [items (->> schema
+                   ^ObjectSchema .getAdditionalProperties
+                   spec)]
+    (clojure.pprint/pprint items)))
+
+(defmethod spec
+  DateTimeSchema
+  [^DateTimeSchema schema]
+  'date-time)
+
+(defmethod spec
+  DateSchema
+  [^DateSchema schema]
+  'date)
+
+(defmethod spec
+  ApiResponse
+  [^ApiResponse schema]
+  (println schema))
+
 (defmulti param->data class)
 
 ;; TODO: Better. The extra [] is there to help with merge-with into
@@ -137,6 +171,20 @@
                              [:or nil? body-spec])]
     {:body maybe-body}))
 
+(defn response->data
+  "Converts an ApiResponse to map."
+  [^ApiResponse api-response]
+  (let [^MediaType content (-> api-response
+                               .getContent
+                               .values
+                               .stream
+                               .findFirst
+                               .get)
+        body-spec          (-> content
+                               .getSchema
+                               spec)]
+    {:body body-spec}))
+
 (defn operation->data
   "Converts an Operation to map of parameters, schemas and handler conforming to reitit"
   [^Operation op handlers]
@@ -145,14 +193,19 @@
         params       (if (nil? request-body)
                        params
                        (conj params request-body))
-        schemas      (->> params
+        parameters   (->> params
                           (map param->data)
                           (apply merge-with into)
                           (wrap-map :path)
                           (wrap-map :query))
+        responses    (->> (into [] (.getResponses op))
+                          (mapv #(vector (.getKey ^Map$Entry %)
+                                         (-> %
+                                             (^ApiResponse .getValue)
+                                             (response->data)))))
         handler      {:handler (get handlers (.getOperationId op))}]
-    (if (seq schemas)
-      (assoc handler :parameters schemas)
+    (if (seq parameters)
+      (assoc handler :parameters parameters)
       handler)))
 
 (defn path-item->data
@@ -199,7 +252,18 @@
      "HealthCheck" (fn [_]
                      {:status 200
                       :body   "Ok"})})
-  (-> "api.yaml"
-      slurp
-      (routes-from handlers)
-      pp/pprint))
+
+  (def parse-options (doto (ParseOptions.)
+                        (.setResolveFully true)))
+
+  (def api-spec (-> "compiled.json"
+                    slurp))
+
+  (->> (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
+       .getOpenAPI
+       .getPaths
+       (mapv #(vector (.getKey ^Map$Entry %)
+                      (-> ^Map$Entry %
+                          .getValue
+                          (path-item->data handlers))))))
+
