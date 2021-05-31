@@ -3,7 +3,7 @@
 ; which can be found in the file epl-v10.html at the root of this distribution.
 ; By using this software in any fashion, you are agreeing to be bound by the terms of this license.
 
-{:deps    {io.swagger.parser.v3/swagger-parser {:mvn/version "2.0.24"}}
- :aliases {:test {:extra-deps {lambdaisland/kaocha    {:mvn/version "1.0.732"}
+{:deps    {io.swagger.parser.v3/swagger-parser {:mvn/version "2.0.26"}}
+ :aliases {:test {:extra-deps {lambdaisland/kaocha    {:mvn/version "1.0.861"}
                                org.clojure/test.check {:mvn/version "1.1.0"}}
                   :main-opts  ["-m" "kaocha.runner" "--reporter" "kaocha.report.progress/report"]}}}

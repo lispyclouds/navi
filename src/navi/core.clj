@@ -5,9 +5,19 @@
 
 (ns navi.core
   (:import [java.util Map$Entry]
-           [io.swagger.v3.oas.models.media StringSchema IntegerSchema ObjectSchema ArraySchema MediaType]
-           [io.swagger.v3.oas.models.parameters PathParameter QueryParameter RequestBody Parameter]
-           [io.swagger.v3.oas.models Operation PathItem]
+           [io.swagger.v3.oas.models.media StringSchema
+                                           IntegerSchema
+                                           ObjectSchema
+                                           ArraySchema
+                                           NumberSchema
+                                           BooleanSchema
+                                           MediaType]
+           [io.swagger.v3.oas.models.parameters PathParameter
+                                                QueryParameter
+                                                RequestBody
+                                                Parameter]
+           [io.swagger.v3.oas.models Operation
+                                     PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
@@ -64,6 +74,16 @@
   IntegerSchema
   [_]
   int?)
+
+(defmethod spec
+  NumberSchema
+  [_]
+  number?)
+
+(defmethod spec
+  BooleanSchema
+  [_]
+  boolean?)
 
 (defmethod spec
   ObjectSchema

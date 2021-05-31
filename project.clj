@@ -9,4 +9,4 @@
   :description  "A tiny library converting OpenAPI route definitions to Reitit routes."
   :license      {:name "EPL 1.0"
                  :url  "http://opensource.org/licenses/eclipse-1.0.php"}
-  :dependencies [[io.swagger.parser.v3/swagger-parser "2.0.24"]])
+  :dependencies [[io.swagger.parser.v3/swagger-parser "2.0.26"]])
