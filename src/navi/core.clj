@@ -22,6 +22,8 @@
                                                 Parameter]
            [io.swagger.v3.oas.models Operation
                                      PathItem]
+           [java.time Instant LocalDate]
+           [java.time.format DateTimeParseException]
            [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]
            [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
@@ -115,7 +117,7 @@
 (defmethod spec
   Schema
   [^ObjectSchema schema]
-  schema)
+  #(spec schema))
 
 (defmethod spec
   MapSchema
@@ -123,22 +125,21 @@
   (let [items (->> schema
                    ^ObjectSchema .getAdditionalProperties
                    spec)]
-    (clojure.pprint/pprint items)))
+    items))
 
 (defmethod spec
   DateTimeSchema
-  [^DateTimeSchema schema]
-  'date-time)
+  [_]
+  #(instance? Instant
+              (try (Instant/parse %)
+                   (catch DateTimeParseException _ false))))
 
 (defmethod spec
   DateSchema
-  [^DateSchema schema]
-  'date)
-
-(defmethod spec
-  ApiResponse
-  [^ApiResponse schema]
-  (println schema))
+  [_]
+  #(instance? LocalDate
+              (try (LocalDate/parse %)
+                   (catch DateTimeParseException _ false))))
 
 (defmulti param->data class)
 
@@ -198,15 +199,16 @@
                           (apply merge-with into)
                           (wrap-map :path)
                           (wrap-map :query))
-        responses    (->> (into [] (.getResponses op))
-                          (mapv #(vector (.getKey ^Map$Entry %)
-                                         (-> %
-                                             (^ApiResponse .getValue)
-                                             (response->data)))))
+        responses    (->> (.getResponses op)
+                          (map #(vector (.getKey ^Map$Entry %)
+                                        (-> %
+                                            (^ApiResponse .getValue)
+                                            (response->data))))
+                          (into {}))
         handler      {:handler (get handlers (.getOperationId op))}]
-    (if (seq parameters)
-      (assoc handler :parameters parameters)
-      handler)))
+    (cond-> handler
+      (seq parameters) (assoc :parameters parameters)
+      (seq responses)  (assoc :responses responses))))
 
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
