@@ -4,7 +4,7 @@
 ; By using this software in any fashion, you are agreeing to be bound by the terms of this license.
 
 (ns navi.core
-  (:import [java.util Map$Entry]
+  (:import [java.util LinkedHashMap Map$Entry]
            [io.swagger.v3.oas.models.media Schema
                                            StringSchema
                                            IntegerSchema
@@ -25,7 +25,7 @@
                                      PathItem]
            [java.time Instant LocalDate]
            [java.time.format DateTimeParseException]
-           [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]
+           [io.swagger.v3.oas.models.responses ApiResponse]
            [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
@@ -75,26 +75,6 @@
 (defmulti spec class)
 
 (defmethod spec
-  StringSchema
-  [_]
-  string?)
-
-(defmethod spec
-  IntegerSchema
-  [_]
-  int?)
-
-(defmethod spec
-  NumberSchema
-  [_]
-  number?)
-
-(defmethod spec
-  BooleanSchema
-  [_]
-  boolean?)
-
-(defmethod spec
   ObjectSchema
   [^ObjectSchema schema]
   (let [required (->> schema
@@ -116,25 +96,32 @@
        (spec items))]))
 
 (defmethod spec
-  nil
-  [_])
-
-(defmethod spec
   LinkedHashMap
-  [schema]
-  (pp/pprint schema))
+  [^LinkedHashMap schema]
+  (->> schema
+       (map #(vector (-> ^Map$Entry %
+                         .getKey
+                         .toString
+                         .toLowerCase
+                         keyword)
+                     (-> ^Map$Entry %
+                         .getValue
+                         spec)))
+       (into {})))
 
 (defmethod spec
   Schema
   [schema]
-  (pp/pprint (->> schema
-                  .getProperties
-                  spec)))
+  (->> schema
+       .getProperties
+       spec))
 
 (defmethod spec
   ComposedSchema
   [^ComposedSchema schema]
-  (pp/pprint schema))
+  (->> schema
+       .getProperties
+       spec))
 
 (defmethod spec
   MapSchema
@@ -143,6 +130,26 @@
                    ^ObjectSchema .getAdditionalProperties
                    spec)]
     items))
+
+(defmethod spec
+  StringSchema
+  [_]
+  string?)
+
+(defmethod spec
+  IntegerSchema
+  [_]
+  int?)
+
+(defmethod spec
+  NumberSchema
+  [_]
+  number?)
+
+(defmethod spec
+  BooleanSchema
+  [_]
+  boolean?)
 
 (defmethod spec
   DateTimeSchema
@@ -157,6 +164,11 @@
   #(instance? LocalDate
               (try (LocalDate/parse %)
                    (catch DateTimeParseException _ false))))
+
+(defmethod spec
+  nil
+  [_]
+  {:NILSPEC "Found nil spec"})
 
 (defmulti param->data class)
 
