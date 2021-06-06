@@ -11,6 +11,7 @@
                                            ObjectSchema
                                            ArraySchema
                                            MapSchema
+                                           ComposedSchema
                                            NumberSchema
                                            BooleanSchema
                                            DateSchema
@@ -115,9 +116,25 @@
        (spec items))]))
 
 (defmethod spec
+  nil
+  [_])
+
+(defmethod spec
+  LinkedHashMap
+  [schema]
+  (pp/pprint schema))
+
+(defmethod spec
   Schema
-  [^ObjectSchema schema]
-  #(spec schema))
+  [schema]
+  (pp/pprint (->> schema
+                  .getProperties
+                  spec)))
+
+(defmethod spec
+  ComposedSchema
+  [^ComposedSchema schema]
+  (pp/pprint schema))
 
 (defmethod spec
   MapSchema
