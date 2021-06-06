@@ -107,29 +107,33 @@
                      (-> ^Map$Entry %
                          .getValue
                          spec)))
-       (into {})))
+       (into [:map {:closed false}])))
 
 (defmethod spec
   Schema
   [schema]
   (->> schema
        .getProperties
-       spec))
+       spec
+       (into [:map {:closed false}])))
 
 (defmethod spec
   ComposedSchema
   [^ComposedSchema schema]
   (->> schema
-       .getProperties
-       spec))
+       ^ObjectSchema .getProperties
+       spec
+       (into [:map {:closed false}])))
 
 (defmethod spec
   MapSchema
   [^MapSchema schema]
-  (let [items (->> schema
-                   ^ObjectSchema .getAdditionalProperties
-                   spec)]
-    items))
+  (into [:map {:closed false}] [(->> schema
+                                     ^ObjectSchema .getProperties
+                                     spec)
+                                (->> schema
+                                     ^ObjectSchema .getAdditionalProperties
+                                     spec)]))
 
 (defmethod spec
   StringSchema
@@ -168,7 +172,7 @@
 (defmethod spec
   nil
   [_]
-  {:NILSPEC "Found nil spec"})
+  #_{:NILSPEC "Found nil spec"})
 
 (defmulti param->data class)
 
@@ -296,5 +300,10 @@
        (mapv #(vector (.getKey ^Map$Entry %)
                       (-> ^Map$Entry %
                           .getValue
-                          (path-item->data handlers))))))
+                          (path-item->data handlers)))))
 
+
+  (-> "compiled.json"
+      slurp
+      (routes-from handlers)
+      pp/pprint))
