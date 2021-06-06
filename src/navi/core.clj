@@ -4,13 +4,18 @@
 ; By using this software in any fashion, you are agreeing to be bound by the terms of this license.
 
 (ns navi.core
-  (:import [java.util Map$Entry]
-           [io.swagger.v3.oas.models.media StringSchema
+  (:import [java.util LinkedHashMap Map$Entry]
+           [io.swagger.v3.oas.models.media Schema
+                                           StringSchema
                                            IntegerSchema
                                            ObjectSchema
                                            ArraySchema
+                                           MapSchema
+                                           ComposedSchema
                                            NumberSchema
                                            BooleanSchema
+                                           DateSchema
+                                           DateTimeSchema
                                            MediaType]
            [io.swagger.v3.oas.models.parameters PathParameter
                                                 QueryParameter
@@ -18,6 +23,10 @@
                                                 Parameter]
            [io.swagger.v3.oas.models Operation
                                      PathItem]
+           [java.time Instant LocalDate]
+           [java.time.format DateTimeParseException]
+           [io.swagger.v3.oas.models.responses ApiResponse]
+           [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
@@ -66,6 +75,67 @@
 (defmulti spec class)
 
 (defmethod spec
+  ObjectSchema
+  [^ObjectSchema schema]
+  (let [required (->> schema
+                      .getRequired
+                      (into #{}))
+        schemas  (->> schema
+                      .getProperties
+                      (map #(->prop-schema required %))
+                      (into []))]
+    (into [:map {:closed false}] schemas)))
+
+(defmethod spec
+  ArraySchema
+  [^ArraySchema schema]
+  (let [items (.getItems schema)]
+    [:sequential
+     (if (nil? items)
+       any?
+       (spec items))]))
+
+(defmethod spec
+  LinkedHashMap
+  [^LinkedHashMap schema]
+  (->> schema
+       (map #(vector (-> ^Map$Entry %
+                         .getKey
+                         .toString
+                         .toLowerCase
+                         keyword)
+                     (-> ^Map$Entry %
+                         .getValue
+                         spec)))
+       (into [:map {:closed false}])))
+
+(defmethod spec
+  Schema
+  [schema]
+  (->> schema
+       .getProperties
+       spec
+       (into [:map {:closed false}])))
+
+(defmethod spec
+  ComposedSchema
+  [^ComposedSchema schema]
+  (->> schema
+       ^ObjectSchema .getProperties
+       spec
+       (into [:map {:closed false}])))
+
+(defmethod spec
+  MapSchema
+  [^MapSchema schema]
+  (into [:map {:closed false}] [(->> schema
+                                     ^ObjectSchema .getProperties
+                                     spec)
+                                (->> schema
+                                     ^ObjectSchema .getAdditionalProperties
+                                     spec)]))
+
+(defmethod spec
   StringSchema
   [_]
   string?)
@@ -86,25 +156,23 @@
   boolean?)
 
 (defmethod spec
-  ObjectSchema
-  [^ObjectSchema schema]
-  (let [required (->> schema
-                      .getRequired
-                      (into #{}))
-        schemas  (->> schema
-                      .getProperties
-                      (map #(->prop-schema required %))
-                      (into []))]
-    (into [:map {:closed false}] schemas)))
+  DateTimeSchema
+  [_]
+  #(instance? Instant
+              (try (Instant/parse %)
+                   (catch DateTimeParseException _ false))))
 
 (defmethod spec
-  ArraySchema
-  [^ArraySchema schema]
-  (let [items (.getItems schema)]
-    [:sequential
-     (if (nil? items)
-       any?
-       (spec items))]))
+  DateSchema
+  [_]
+  #(instance? LocalDate
+              (try (LocalDate/parse %)
+                   (catch DateTimeParseException _ false))))
+
+(defmethod spec
+  nil
+  [_]
+  #_{:NILSPEC "Found nil spec"})
 
 (defmulti param->data class)
 
@@ -137,6 +205,20 @@
                              [:or nil? body-spec])]
     {:body maybe-body}))
 
+(defn response->data
+  "Converts an ApiResponse to map."
+  [^ApiResponse api-response]
+  (let [^MediaType content (-> api-response
+                               .getContent
+                               .values
+                               .stream
+                               .findFirst
+                               .get)
+        body-spec          (-> content
+                               .getSchema
+                               spec)]
+    {:body body-spec}))
+
 (defn operation->data
   "Converts an Operation to map of parameters, schemas and handler conforming to reitit"
   [^Operation op handlers]
@@ -145,15 +227,21 @@
         params       (if (nil? request-body)
                        params
                        (conj params request-body))
-        schemas      (->> params
+        parameters   (->> params
                           (map param->data)
                           (apply merge-with into)
                           (wrap-map :path)
                           (wrap-map :query))
+        responses    (->> (.getResponses op)
+                          (map #(vector (.getKey ^Map$Entry %)
+                                        (-> %
+                                            (^ApiResponse .getValue)
+                                            (response->data))))
+                          (into {}))
         handler      {:handler (get handlers (.getOperationId op))}]
-    (if (seq schemas)
-      (assoc handler :parameters schemas)
-      handler)))
+    (cond-> handler
+      (seq parameters) (assoc :parameters parameters)
+      (seq responses)  (assoc :responses responses))))
 
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
@@ -199,7 +287,23 @@
      "HealthCheck" (fn [_]
                      {:status 200
                       :body   "Ok"})})
-  (-> "api.yaml"
+
+  (def parse-options (doto (ParseOptions.)
+                        (.setResolveFully true)))
+
+  (def api-spec (-> "compiled.json"
+                    slurp))
+
+  (->> (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
+       .getOpenAPI
+       .getPaths
+       (mapv #(vector (.getKey ^Map$Entry %)
+                      (-> ^Map$Entry %
+                          .getValue
+                          (path-item->data handlers)))))
+
+
+  (-> "compiled.json"
       slurp
       (routes-from handlers)
       pp/pprint))
