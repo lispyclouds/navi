@@ -6,7 +6,7 @@ Suitable for [spec-first](https://www.atlassian.com/blog/technology/spec-first-a
 
 ## Status
 
-Experimental and work in progress. APIs subject to change.
+Experimental
 
 ## Features
 
