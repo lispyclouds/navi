@@ -19,6 +19,7 @@ Experimental
   - integer
   - array
   - object
+  - uuid
 
 Currently unsupported:
 - Response coercions
