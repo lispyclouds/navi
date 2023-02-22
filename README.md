@@ -118,15 +118,15 @@ components:
 A clojure map of OperationId to handler fns:
 ```clojure
 (def handlers
-  {"AddGet"      (fn [{{{:keys [n1 n2]} :path} :parameters}]
-                   {:status 200
-                    :body   (str (+ n1 n2))})
-   "AddPost"     (fn [{{{:keys [n1 n2]} :body} :parameters}]
-                   {:status 200
-                    :body   (str (+ n1 n2))})
+  {"AddGet" (fn [{{{:keys [n1 n2]} :path} :parameters}]
+              {:status 200
+               :body (str (+ n1 n2))})
+   "AddPost" (fn [{{{:keys [n1 n2]} :body} :parameters}]
+               {:status 200
+                :body (str (+ n1 n2))})
    "HealthCheck" (fn [_]
                    {:status 200
-                    :body   "Ok"})})
+                    :body "Ok"})})
 ```
 
 Generate the routes:
@@ -156,58 +156,64 @@ Generate the routes:
 
 Bootstrapping a Jetty server:
 ```clojure
-(ns server
-  (:require [muuntaja.core :as m]
-            [reitit.ring :as ring]
-            [reitit.http :as http]
-            [reitit.coercion.malli :as malli]
-            [reitit.http.coercion :as coercion]
-            [reitit.http.interceptors.parameters :as parameters]
-            [reitit.http.interceptors.muuntaja :as muuntaja]
-            [reitit.interceptor.sieppari :as sieppari]
-            [ring.adapter.jetty :as jetty]
-            [navi.core :as navi]))
+(ns server.main
+  (:require
+   [muuntaja.core :as m]
+   [navi.core :as navi]
+   [reitit.coercion.malli :as malli]
+   [reitit.http :as http]
+   [reitit.http.coercion :as coercion]
+   [reitit.http.interceptors.exception :as exception]
+   [reitit.http.interceptors.muuntaja :as muuntaja]
+   [reitit.http.interceptors.parameters :as parameters]
+   [reitit.interceptor.sieppari :as sieppari]
+   [reitit.ring :as ring]
+   [ring.adapter.jetty :as jetty])
+  (:gen-class))
 
 (def server
   (http/ring-handler
-    (http/router (-> "api.yaml"
-                     slurp
-                     (navi/routes-from handlers)) ; handlers is the map described before
-                 {:data {:coercion     malli/coercion
-                         :muuntaja     m/instance
-                         :interceptors [(parameters/parameters-interceptor)
-                                        (muuntaja/format-negotiate-interceptor)
-                                        (muuntaja/format-response-interceptor)
-                                        (exception/exception-interceptor)
-                                        (muuntaja/format-request-interceptor)
-                                        (coercion/coerce-exceptions-interceptor)
-                                        (coercion/coerce-response-interceptor)
-                                        (coercion/coerce-request-interceptor)]}})
-    (ring/routes
-      (ring/create-default-handler
-        {:not-found (constantly {:status  404
-                                 :headers {"Content-Type" "application/json"}
-                                 :body    "{\"message\": \"Took a wrong turn?\"}"})}))
-    {:executor sieppari/executor}))
+   (http/router (-> "api.yaml"
+                    slurp
+                    (navi/routes-from handlers)) ; handlers is the map described before
+                {:data {:coercion malli/coercion
+                        :muuntaja m/instance
+                        :interceptors [(parameters/parameters-interceptor)
+                                       (muuntaja/format-negotiate-interceptor)
+                                       (muuntaja/format-response-interceptor)
+                                       (exception/exception-interceptor)
+                                       (muuntaja/format-request-interceptor)
+                                       (coercion/coerce-exceptions-interceptor)
+                                       (coercion/coerce-response-interceptor)
+                                       (coercion/coerce-request-interceptor)]}})
+   (ring/routes
+    (ring/create-default-handler
+     {:not-found (constantly {:status 404
+                              :headers {"Content-Type" "application/json"}
+                              :body "{\"message\": \"Took a wrong turn?\"}"})}))
+   {:executor sieppari/executor}))
 
-(jetty/run-jetty (var server)
-                 {:host   "0.0.0.0"
-                  :port   7777
-                  :join?  false
-                  :async? true})
+(defn -main
+  [& _]
+  (jetty/run-jetty (var server)
+                   {:host "0.0.0.0"
+                    :port 7777
+                    :join? false
+                    :async? true}))
 ```
 
 deps.edn used for this example:
 ```edn
 {:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.2"}
-        metosin/reitit-core          {:mvn/version "0.6.0"}
-        metosin/reitit-http          {:mvn/version "0.6.0"}
-        metosin/reitit-interceptors  {:mvn/version "0.6.0"}
-        metosin/reitit-malli         {:mvn/version "0.6.0"}
-        metosin/reitit-ring          {:mvn/version "0.6.0"}
-        metosin/reitit-sieppari      {:mvn/version "0.6.0"}
-        metosin/muuntaja             {:mvn/version "0.6.8"}
-        ring/ring-jetty-adapter      {:mvn/version "1.9.2"}}}
+        metosin/reitit-core {:mvn/version "0.6.0"}
+        metosin/reitit-http {:mvn/version "0.6.0"}
+        metosin/reitit-interceptors {:mvn/version "0.6.0"}
+        metosin/reitit-malli {:mvn/version "0.6.0"}
+        metosin/reitit-ring {:mvn/version "0.6.0"}
+        metosin/reitit-sieppari {:mvn/version "0.6.0"}
+        metosin/reitit-middleware {:mvn/version "0.6.0"}
+        metosin/muuntaja {:mvn/version "0.6.8"}
+        ring/ring-jetty-adapter {:mvn/version "1.9.6"}}}
 ```
 
 ### Build Requirements
@@ -219,6 +225,6 @@ deps.edn used for this example:
 
 ## License
 
-Copyright © 2020-2021 Rahul De
+Copyright © 2020- Rahul De
 
-Distributed under the EPL License, same as Clojure. See LICENSE.
+Distributed under the MIT License. See LICENSE.
