@@ -12,6 +12,7 @@
                                            ArraySchema
                                            NumberSchema
                                            BooleanSchema
+                                           UUIDSchema
                                            MediaType]
            [io.swagger.v3.oas.models.parameters PathParameter
                                                 QueryParameter
@@ -85,6 +86,11 @@
   BooleanSchema
   [_]
   boolean?)
+
+(defmethod spec
+  UUIDSchema
+  [_]
+  uuid?)
 
 (defmethod spec
   ObjectSchema
