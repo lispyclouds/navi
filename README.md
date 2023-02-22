@@ -178,7 +178,9 @@ Bootstrapping a Jetty server:
                          :interceptors [(parameters/parameters-interceptor)
                                         (muuntaja/format-negotiate-interceptor)
                                         (muuntaja/format-response-interceptor)
+                                        (exception/exception-interceptor)
                                         (muuntaja/format-request-interceptor)
+                                        (coercion/coerce-exceptions-interceptor)
                                         (coercion/coerce-response-interceptor)
                                         (coercion/coerce-request-interceptor)]}})
     (ring/routes
@@ -198,13 +200,12 @@ Bootstrapping a Jetty server:
 deps.edn used for this example:
 ```edn
 {:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.2"}
-        metosin/reitit-core          {:mvn/version "0.5.12"}
-        metosin/reitit-http          {:mvn/version "0.5.12"}
-        metosin/reitit-interceptors  {:mvn/version "0.5.12"}
-        metosin/reitit-malli         {:mvn/version "0.5.12"}
-        metosin/reitit-ring          {:mvn/version "0.5.12"}
-        metosin/reitit-sieppari      {:mvn/version "0.5.12"}
-        metosin/reitit-middleware    {:mvn/version "0.5.12"}
+        metosin/reitit-core          {:mvn/version "0.6.0"}
+        metosin/reitit-http          {:mvn/version "0.6.0"}
+        metosin/reitit-interceptors  {:mvn/version "0.6.0"}
+        metosin/reitit-malli         {:mvn/version "0.6.0"}
+        metosin/reitit-ring          {:mvn/version "0.6.0"}
+        metosin/reitit-sieppari      {:mvn/version "0.6.0"}
         metosin/muuntaja             {:mvn/version "0.6.8"}
         ring/ring-jetty-adapter      {:mvn/version "1.9.2"}}}
 ```
