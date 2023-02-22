@@ -9,7 +9,7 @@
             [navi.core :as core])
   (:import [java.util Map LinkedHashMap]
            [io.swagger.v3.oas.models Operation PathItem]
-           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema ObjectSchema ArraySchema MediaType]
+           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema ObjectSchema ArraySchema MediaType UUIDSchema]
            [io.swagger.v3.oas.models.parameters Parameter PathParameter QueryParameter RequestBody]))
 
 (deftest map-to-malli-spec
@@ -71,7 +71,10 @@
     (let [arr (doto (ArraySchema.)
                 (.setItems (StringSchema.)))]
       (is (= [:sequential string?]
-             (core/spec arr))))))
+             (core/spec arr)))))
+  (testing "uuid"
+    (is (= uuid?
+           (core/spec (UUIDSchema.))))))
 
 (deftest parameters-to-malli-spec
   (testing "path"
