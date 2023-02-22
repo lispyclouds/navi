@@ -211,7 +211,6 @@ deps.edn used for this example:
         metosin/reitit-malli {:mvn/version "0.6.0"}
         metosin/reitit-ring {:mvn/version "0.6.0"}
         metosin/reitit-sieppari {:mvn/version "0.6.0"}
-        metosin/reitit-middleware {:mvn/version "0.6.0"}
         metosin/muuntaja {:mvn/version "0.6.8"}
         ring/ring-jetty-adapter {:mvn/version "1.9.6"}}}
 ```
