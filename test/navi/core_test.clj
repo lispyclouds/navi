@@ -10,7 +10,7 @@
   (:import [java.util Map LinkedHashMap]
            [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema ObjectSchema ArraySchema MediaType UUIDSchema]
-           [io.swagger.v3.oas.models.parameters Parameter PathParameter QueryParameter RequestBody]))
+           [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]))
 
 (deftest map-to-malli-spec
   (testing "surrounding values of a clojure map to a malli map spec"
@@ -90,6 +90,13 @@
                   (.setSchema (IntegerSchema.)))]
       (is (= {:query [[:x int?]]}
              (core/param->data param)))))
+  (testing "header"
+    (let [param (doto (HeaderParameter.)
+                  (.setName "x")
+                  (.setRequired true)
+                  (.setSchema (IntegerSchema.)))]
+      (is (= {:header [[:x int?]]}
+             (core/param->data param)))))
   (testing "required request body"
     (let [media   (doto (MediaType.)
                     (.setSchema (ObjectSchema.)))
@@ -125,12 +132,16 @@
     (let [param     (doto (PathParameter.)
                       (.setName "x")
                       (.setSchema (IntegerSchema.)))
+          hparam    (doto (HeaderParameter.)
+                      (.setName "y")
+                      (.setSchema (StringSchema.)))
           operation (doto (Operation.)
-                      (.setParameters [param])
+                      (.setParameters [param hparam])
                       (.setOperationId "TestOp"))
           handlers  {"TestOp" "a handler"}]
       (is (= {:handler    "a handler"
-              :parameters {:path [:map [:x int?]]}}
+              :parameters {:path [:map [:x int?]]
+                           :header [:map [:y {:optional true} string?]]}}
              (core/operation->data operation handlers))))))
 
 (deftest openapi-path-to-malli-spec
