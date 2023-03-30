@@ -15,6 +15,7 @@
                                            UUIDSchema
                                            MediaType]
            [io.swagger.v3.oas.models.parameters PathParameter
+                                                HeaderParameter
                                                 QueryParameter
                                                 RequestBody
                                                 Parameter]
@@ -122,6 +123,11 @@
   {:path [(->param-schema param)]})
 
 (defmethod param->data
+  HeaderParameter
+  [param]
+  {:header [(->param-schema param)]})
+
+(defmethod param->data
   QueryParameter
   [param]
   {:query [(->param-schema param)]})
@@ -156,7 +162,8 @@
                           (map param->data)
                           (apply merge-with into)
                           (wrap-map :path)
-                          (wrap-map :query))
+                          (wrap-map :query)
+                          (wrap-map :header))
         handler      {:handler (get handlers (.getOperationId op))}]
     (if (seq schemas)
       (assoc handler :parameters schemas)
