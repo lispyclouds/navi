@@ -7,20 +7,20 @@
 (ns navi.core
   (:import [java.util Map$Entry]
            [io.swagger.v3.oas.models.media StringSchema
-                                           IntegerSchema
-                                           ObjectSchema
-                                           ArraySchema
-                                           NumberSchema
-                                           BooleanSchema
-                                           UUIDSchema
-                                           MediaType]
+            IntegerSchema
+            ObjectSchema
+            ArraySchema
+            NumberSchema
+            BooleanSchema
+            UUIDSchema
+            MediaType]
            [io.swagger.v3.oas.models.parameters PathParameter
-                                                HeaderParameter
-                                                QueryParameter
-                                                RequestBody
-                                                Parameter]
+            HeaderParameter
+            QueryParameter
+            RequestBody
+            Parameter]
            [io.swagger.v3.oas.models Operation
-                                     PathItem]
+            PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
@@ -30,11 +30,9 @@
 (defn wrap-map
   "Surrounds the key in a map for malli conformance"
   [k m]
-  (if (contains? m k)
-    (update-in m
-               [k]
-               #(into [:map] %))
-    m))
+  (cond-> m
+    (contains? m k)
+    (update-in [k] #(into [:map] %))))
 
 ;; TODO: Better
 (defn ->prop-schema
@@ -144,11 +142,10 @@
                                .get)
         body-spec          (-> content
                                .getSchema
-                               spec)
-        maybe-body         (if (.getRequired param)
-                             body-spec
-                             [:or nil? body-spec])]
-    {:body maybe-body}))
+                               spec)]
+    {:body (if (.getRequired param)
+             body-spec
+             [:or nil? body-spec])}))
 
 (defn operation->data
   "Converts an Operation to map of parameters, schemas and handler conforming to reitit"
@@ -163,11 +160,10 @@
                           (apply merge-with into)
                           (wrap-map :path)
                           (wrap-map :query)
-                          (wrap-map :header))
-        handler      {:handler (get handlers (.getOperationId op))}]
-    (if (seq schemas)
-      (assoc handler :parameters schemas)
-      handler)))
+                          (wrap-map :header))]
+    (cond-> {:handler (get handlers (.getOperationId op))}
+      (seq schemas)
+      (assoc :parameters schemas))))
 
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
