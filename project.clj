@@ -10,4 +10,4 @@
   :description  "A tiny library converting OpenAPI route definitions to Reitit routes."
   :license      {:name "MIT"
                  :url  "https://opensource.org/licenses/MIT"}
-  :dependencies [[io.swagger.parser.v3/swagger-parser "2.1.16"]])
+  :dependencies [[io.swagger.parser.v3/swagger-parser "2.1.18"]])
