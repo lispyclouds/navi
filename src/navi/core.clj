@@ -6,14 +6,7 @@
 
 (ns navi.core
   (:import [java.util Map$Entry]
-           [io.swagger.v3.oas.models.media StringSchema
-            IntegerSchema
-            ObjectSchema
-            ArraySchema
-            NumberSchema
-            BooleanSchema
-            UUIDSchema
-            MediaType]
+           [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
             HeaderParameter
             QueryParameter
@@ -64,36 +57,35 @@
               .getSchema
               spec))))
 
-(defmulti spec class)
+(defmulti spec
+  (fn [^Schema schema]
+    (.getTypes schema)))
 
 (defmethod spec
-  StringSchema
-  [_]
-  string?)
+  #{"string"}
+  [^Schema schema]
+  (if (= "uuid" (.getFormat schema))
+    uuid?
+    string?))
 
 (defmethod spec
-  IntegerSchema
+  #{"integer"}
   [_]
   int?)
 
 (defmethod spec
-  NumberSchema
+  #{"number"}
   [_]
   number?)
 
 (defmethod spec
-  BooleanSchema
+  #{"boolean"}
   [_]
   boolean?)
 
 (defmethod spec
-  UUIDSchema
-  [_]
-  uuid?)
-
-(defmethod spec
-  ObjectSchema
-  [^ObjectSchema schema]
+  #{"object"}
+  [^Schema schema]
   (let [required (->> schema
                       .getRequired
                       (into #{}))
@@ -104,8 +96,8 @@
     (into [:map {:closed false}] schemas)))
 
 (defmethod spec
-  ArraySchema
-  [^ArraySchema schema]
+  #{"array"}
+  [^Schema schema]
   (let [items (.getItems schema)]
     [:sequential
      (if (nil? items)

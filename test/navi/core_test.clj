@@ -9,7 +9,7 @@
             [navi.core :as core])
   (:import [java.util Map LinkedHashMap]
            [io.swagger.v3.oas.models Operation PathItem]
-           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema ObjectSchema ArraySchema MediaType UUIDSchema]
+           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
            [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]))
 
 (deftest map-to-malli-spec
@@ -48,33 +48,72 @@
 (deftest openapi-schema-to-malli-spec
   (testing "string"
     (is (= string?
-           (core/spec (StringSchema.)))))
+           (core/spec (StringSchema.))))
+    (is (= string?
+           (core/spec (doto (Schema.)
+                        (.addType "string"))))))
   (testing "integer"
     (is (= int?
-           (core/spec (IntegerSchema.)))))
+           (core/spec (IntegerSchema.))))
+    (is (= int?
+           (core/spec (doto (Schema.)
+                        (.addType "integer"))))))
+  (testing "number"
+    (is (= number?
+           (core/spec (NumberSchema.))))
+    (is (= number?
+           (core/spec (doto (Schema.)
+                        (.addType "number"))))))
   (testing "empty object"
     (is (= [:map {:closed false}]
-           (core/spec (ObjectSchema.)))))
+           (core/spec (ObjectSchema.))))
+    (is (= [:map {:closed false}]
+           (core/spec (doto (Schema.)
+                        (.addType "object"))))))
   (testing "object"
     (let [props (doto (LinkedHashMap.)
                   (.put "x" (IntegerSchema.))
                   (.put "y" (StringSchema.)))
           obj   (doto (ObjectSchema.)
                   (.setRequired ["y" "x"])
-                  (.setProperties props))]
+                  (.setProperties props))
+          props-json (doto (LinkedHashMap.)
+                       (.put "x" (doto (Schema.)
+                                   (.addType "integer")))
+                       (.put "y" (doto (Schema.)
+                                   (.addType "string"))))
+          obj-json   (doto (Schema.)
+                       (.addType "object")
+                       (.setRequired ["y" "x"])
+                       (.setProperties props-json))]
       (is (= [:map {:closed false} [:x int?] [:y string?]]
-             (core/spec obj)))))
+             (core/spec obj)))
+      (is (= [:map {:closed false} [:x int?] [:y string?]]
+             (core/spec obj-json)))))
   (testing "empty array"
     (is (= [:sequential any?]
-           (core/spec (ArraySchema.)))))
+           (core/spec (ArraySchema.))))
+    (is (= [:sequential any?]
+           (core/spec (doto (Schema.)
+                        (.addType "array"))))))
   (testing "array"
     (let [arr (doto (ArraySchema.)
-                (.setItems (StringSchema.)))]
+                (.setItems (StringSchema.)))
+          arr-json (doto (Schema.)
+                     (.addType "array")
+                     (.setItems (doto (Schema.)
+                                  (.addType "string"))))]
       (is (= [:sequential string?]
-             (core/spec arr)))))
+             (core/spec arr)))
+      (is (= [:sequential string?]
+             (core/spec arr-json)))))
   (testing "uuid"
     (is (= uuid?
-           (core/spec (UUIDSchema.))))))
+           (core/spec (UUIDSchema.))))
+    (is (= uuid?
+           (core/spec (doto (Schema.)
+                        (.addType "string")
+                        (.setFormat "uuid")))))))
 
 (deftest parameters-to-malli-spec
   (testing "path"
