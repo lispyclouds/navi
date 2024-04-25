@@ -27,6 +27,19 @@
     (contains? m k)
     (update-in [k] #(into [:map] %))))
 
+(defn schema->spec [^Schema schema]
+  (let [types (.getTypes schema)]
+    (if (= 1 (count types))
+      (spec schema)
+      (try
+        (->> (map (fn [type]
+                    (.setTypes schema #{type})
+                    (spec schema))
+                  types)
+         (into [:or]))
+        (finally
+          (.setTypes schema types))))))
+
 ;; TODO: Better
 (defn ->prop-schema
   "Given a property and a required keys set, returns a malli spec.
@@ -40,7 +53,7 @@
     (conj key-schema
           (-> property
               .getValue
-              spec))))
+              schema->spec))))
 
 (defn ->param-schema
   "Given a param applies the similar logic as prop to schema
@@ -55,36 +68,42 @@
     (conj key-spec
           (-> param
               .getSchema
-              spec))))
+              schema->spec))))
 
 (defmulti spec
   (fn [^Schema schema]
-    (.getTypes schema)))
+    (first (.getTypes schema))))
 
 (defmethod spec
-  #{"string"}
+  "string"
   [^Schema schema]
   (if (= "uuid" (.getFormat schema))
     uuid?
     string?))
 
 (defmethod spec
-  #{"integer"}
+  "integer"
   [_]
   int?)
 
-(defmethod spec
-  #{"number"}
+(defmethod spec 
+  "number"
   [_]
   number?)
 
 (defmethod spec
-  #{"boolean"}
+  "boolean"
   [_]
   boolean?)
 
+; Added in OpenAPI 3.1.0
 (defmethod spec
-  #{"object"}
+  "null"
+  [_]
+  nil?)
+
+(defmethod spec
+  "object"
   [^Schema schema]
   (let [required (->> schema
                       .getRequired
@@ -96,13 +115,13 @@
     (into [:map {:closed false}] schemas)))
 
 (defmethod spec
-  #{"array"}
+  "array"
   [^Schema schema]
   (let [items (.getItems schema)]
     [:sequential
      (if (nil? items)
        any?
-       (spec items))]))
+       (schema->spec items))]))
 
 (defmulti param->data class)
 
@@ -134,7 +153,7 @@
                                .get)
         body-spec          (-> content
                                .getSchema
-                               spec)]
+                               schema->spec)]
     {:body (if (.getRequired param)
              body-spec
              [:or nil? body-spec])}))

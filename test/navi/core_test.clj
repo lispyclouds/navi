@@ -9,7 +9,8 @@
             [navi.core :as core])
   (:import [java.util Map LinkedHashMap]
            [io.swagger.v3.oas.models Operation PathItem]
-           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
+           [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema JsonSchema
+            NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
            [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]))
 
 (deftest map-to-malli-spec
@@ -48,27 +49,31 @@
 (deftest openapi-schema-to-malli-spec
   (testing "string"
     (is (= string?
-           (core/spec (StringSchema.))))
+           (core/schema->spec (StringSchema.))))
     (is (= string?
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "string"))))))
   (testing "integer"
     (is (= int?
-           (core/spec (IntegerSchema.))))
+           (core/schema->spec (IntegerSchema.))))
     (is (= int?
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "integer"))))))
   (testing "number"
     (is (= number?
-           (core/spec (NumberSchema.))))
+           (core/schema->spec (NumberSchema.))))
     (is (= number?
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "number"))))))
+  (testing "null"
+    (is (= nil?
+           (core/schema->spec (doto (Schema.)
+                        (.addType "null"))))))
   (testing "empty object"
     (is (= [:map {:closed false}]
-           (core/spec (ObjectSchema.))))
+           (core/schema->spec (ObjectSchema.))))
     (is (= [:map {:closed false}]
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "object"))))))
   (testing "object"
     (let [props (doto (LinkedHashMap.)
@@ -87,14 +92,14 @@
                        (.setRequired ["y" "x"])
                        (.setProperties props-json))]
       (is (= [:map {:closed false} [:x int?] [:y string?]]
-             (core/spec obj)))
+             (core/schema->spec obj)))
       (is (= [:map {:closed false} [:x int?] [:y string?]]
-             (core/spec obj-json)))))
+             (core/schema->spec obj-json)))))
   (testing "empty array"
     (is (= [:sequential any?]
-           (core/spec (ArraySchema.))))
+           (core/schema->spec (ArraySchema.))))
     (is (= [:sequential any?]
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "array"))))))
   (testing "array"
     (let [arr (doto (ArraySchema.)
@@ -104,16 +109,22 @@
                      (.setItems (doto (Schema.)
                                   (.addType "string"))))]
       (is (= [:sequential string?]
-             (core/spec arr)))
+             (core/schema->spec arr)))
       (is (= [:sequential string?]
-             (core/spec arr-json)))))
+             (core/schema->spec arr-json)))))
   (testing "uuid"
     (is (= uuid?
-           (core/spec (UUIDSchema.))))
+           (core/schema->spec (UUIDSchema.))))
     (is (= uuid?
-           (core/spec (doto (Schema.)
+           (core/schema->spec (doto (Schema.)
                         (.addType "string")
-                        (.setFormat "uuid")))))))
+                        (.setFormat "uuid"))))))
+  
+  (testing "jsonschemas with multiple types"
+    (let [strint (-> (JsonSchema.)
+                   (.types #{"string" "integer"}))]
+      (is (#{[:or string? int?] [:or int? string?]}
+           (core/schema->spec strint))))))
 
 (deftest parameters-to-malli-spec
   (testing "path"
