@@ -6,14 +6,7 @@
 
 (ns navi.core
   (:import [java.util Map$Entry]
-           [io.swagger.v3.oas.models.media StringSchema
-            IntegerSchema
-            ObjectSchema
-            ArraySchema
-            NumberSchema
-            BooleanSchema
-            UUIDSchema
-            MediaType]
+           [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
             HeaderParameter
             QueryParameter
@@ -34,6 +27,19 @@
     (contains? m k)
     (update-in [k] #(into [:map] %))))
 
+(defn schema->spec [^Schema schema]
+  (let [types (.getTypes schema)]
+    (if (= 1 (count types))
+      (spec schema)
+      (try
+        (->> (map (fn [type]
+                    (.setTypes schema #{type})
+                    (spec schema))
+                  types)
+         (into [:or]))
+        (finally
+          (.setTypes schema types))))))
+
 ;; TODO: Better
 (defn ->prop-schema
   "Given a property and a required keys set, returns a malli spec.
@@ -47,7 +53,7 @@
     (conj key-schema
           (-> property
               .getValue
-              spec))))
+              schema->spec))))
 
 (defn ->param-schema
   "Given a param applies the similar logic as prop to schema
@@ -62,38 +68,43 @@
     (conj key-spec
           (-> param
               .getSchema
-              spec))))
+              schema->spec))))
 
-(defmulti spec class)
-
-(defmethod spec
-  StringSchema
-  [_]
-  string?)
+(defmulti spec
+  (fn [^Schema schema]
+    (first (.getTypes schema))))
 
 (defmethod spec
-  IntegerSchema
+  "string"
+  [^Schema schema]
+  (if (= "uuid" (.getFormat schema))
+    uuid?
+    string?))
+
+(defmethod spec
+  "integer"
   [_]
   int?)
 
-(defmethod spec
-  NumberSchema
+(defmethod spec 
+  "number"
   [_]
   number?)
 
 (defmethod spec
-  BooleanSchema
+  "boolean"
   [_]
   boolean?)
 
+; Added in OpenAPI 3.1.0
 (defmethod spec
-  UUIDSchema
+  "null"
   [_]
-  uuid?)
+  nil?)
 
 (defmethod spec
-  ObjectSchema
-  [^ObjectSchema schema]
+  "object"
+  [^Schema schema]
   (let [required (->> schema
                       .getRequired
                       (into #{}))
@@ -104,13 +115,13 @@
     (into [:map {:closed false}] schemas)))
 
 (defmethod spec
-  ArraySchema
-  [^ArraySchema schema]
+  "array"
+  [^Schema schema]
   (let [items (.getItems schema)]
     [:sequential
      (if (nil? items)
        any?
-       (spec items))]))
+       (schema->spec items))]))
 
 (defmulti param->data class)
 
@@ -142,7 +153,7 @@
                                .get)
         body-spec          (-> content
                                .getSchema
-                               spec)]
+                               schema->spec)]
     {:body (if (.getRequired param)
              body-spec
              [:or nil? body-spec])}))
