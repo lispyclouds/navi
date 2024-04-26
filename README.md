@@ -14,34 +14,28 @@ Experimental
 - Remote and relative [refs](https://swagger.io/docs/specification/using-ref/)
 - Request coercions powered by [Malli](https://github.com/metosin/malli)
 - requestBody coercion
-- The following OpenAPI types are currently supported:
-  - string
-  - integer
-  - array
-  - object
-  - uuid
+- A fair set of OpenAPI types are currently supported, please raise an issue if something is unsupported
 
 Currently unsupported:
 - Response coercions
 - Other coercion libs
-- A lot more of the OpenAPI spec
 
 Any contributions are much much welcome and appreciated!
 
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.0.4"]
+[org.clojars.lispyclouds/navi "0.0.5"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.0.4"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.0.5"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.0.4'
+compile 'org.clojars.lispyclouds:navi:0.0.5'
 ```
 
 Maven
@@ -49,7 +43,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.0.4</version>
+  <version>0.0.5</version>
 </dependency>
 ```
 
@@ -204,7 +198,7 @@ Bootstrapping a Jetty server:
 
 deps.edn used for this example:
 ```edn
-{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.4"}
+{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.5"}
         metosin/reitit-core {:mvn/version "0.6.0"}
         metosin/reitit-http {:mvn/version "0.6.0"}
         metosin/reitit-interceptors {:mvn/version "0.6.0"}
