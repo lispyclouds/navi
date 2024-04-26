@@ -36,7 +36,7 @@
                     (.setTypes schema #{type})
                     (spec schema))
                   types)
-         (into [:or]))
+             (into [:or]))
         (finally
           (.setTypes schema types))))))
 
@@ -86,7 +86,7 @@
   [_]
   int?)
 
-(defmethod spec 
+(defmethod spec
   "number"
   [_]
   number?)

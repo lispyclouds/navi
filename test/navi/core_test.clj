@@ -52,29 +52,29 @@
            (core/schema->spec (StringSchema.))))
     (is (= string?
            (core/schema->spec (doto (Schema.)
-                        (.addType "string"))))))
+                                (.addType "string"))))))
   (testing "integer"
     (is (= int?
            (core/schema->spec (IntegerSchema.))))
     (is (= int?
            (core/schema->spec (doto (Schema.)
-                        (.addType "integer"))))))
+                                (.addType "integer"))))))
   (testing "number"
     (is (= number?
            (core/schema->spec (NumberSchema.))))
     (is (= number?
            (core/schema->spec (doto (Schema.)
-                        (.addType "number"))))))
+                                (.addType "number"))))))
   (testing "null"
     (is (= nil?
            (core/schema->spec (doto (Schema.)
-                        (.addType "null"))))))
+                                (.addType "null"))))))
   (testing "empty object"
     (is (= [:map {:closed false}]
            (core/schema->spec (ObjectSchema.))))
     (is (= [:map {:closed false}]
            (core/schema->spec (doto (Schema.)
-                        (.addType "object"))))))
+                                (.addType "object"))))))
   (testing "object"
     (let [props (doto (LinkedHashMap.)
                   (.put "x" (IntegerSchema.))
@@ -100,7 +100,7 @@
            (core/schema->spec (ArraySchema.))))
     (is (= [:sequential any?]
            (core/schema->spec (doto (Schema.)
-                        (.addType "array"))))))
+                                (.addType "array"))))))
   (testing "array"
     (let [arr (doto (ArraySchema.)
                 (.setItems (StringSchema.)))
@@ -117,12 +117,12 @@
            (core/schema->spec (UUIDSchema.))))
     (is (= uuid?
            (core/schema->spec (doto (Schema.)
-                        (.addType "string")
-                        (.setFormat "uuid"))))))
-  
+                                (.addType "string")
+                                (.setFormat "uuid"))))))
+
   (testing "jsonschemas with multiple types"
     (let [strint (-> (JsonSchema.)
-                   (.types #{"string" "integer"}))]
+                     (.types #{"string" "integer"}))]
       (is (#{[:or string? int?] [:or int? string?]}
            (core/schema->spec strint))))))
 
