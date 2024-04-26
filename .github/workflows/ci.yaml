@@ -39,4 +39,4 @@ jobs:
           restore-keys: "${{ runner.os }}-navi-"
 
       - name: "Run tests"
-        run: "clojure -M:test"
+        run: "clojure -X:test"
