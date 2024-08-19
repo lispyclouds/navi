@@ -5,13 +5,15 @@
 ; https://opensource.org/licenses/MIT.
 
 (ns navi.core
-  (:import [java.util Map$Entry]
+  (:require [clojure.string :as str])
+  (:import [java.util LinkedHashMap Map$Entry]
            [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
             HeaderParameter
             QueryParameter
             RequestBody
             Parameter]
+           [io.swagger.v3.oas.models.responses ApiResponse]
            [io.swagger.v3.oas.models Operation
             PathItem]
            [io.swagger.v3.parser OpenAPIV3Parser]
@@ -72,7 +74,9 @@
 
 (defmulti spec
   (fn [^Schema schema]
-    (first (.getTypes schema))))
+    (if-let [x (first (.getTypes schema))]
+      x
+      "null")))
 
 (defmethod spec
   "string"
@@ -99,6 +103,11 @@
 ; Added in OpenAPI 3.1.0
 (defmethod spec
   "null"
+  [_]
+  nil?)
+
+(defmethod spec
+  nil
   [_]
   nil?)
 
@@ -158,8 +167,52 @@
              body-spec
              [:or nil? body-spec])}))
 
+;;; Handle reponses
+
+(defn linked-hash-map->clj-map
+  "Convert a Java LinkedHashMap to a Clojure map.
+  Preserve nils."
+  [key-fn val-fn ^LinkedHashMap hm]
+  (if (nil? hm)
+    nil
+    (into {}
+          (map (fn lhm-mapper [map-entry]
+                 (vector (key-fn (.getKey ^Map$Entry map-entry))
+                         (val-fn (.getValue ^Map$Entry map-entry))))
+               hm))))
+
+(defn handle-response-key
+  "Reitit seems to want status codes of a response to be integer keys,
+  rather than keyword keys - except for :default.
+  So, convert a string to a Long if relevant.
+  If the string is \"default\" then return it as a keyword, otherwise pass through.
+  Arguably, all non-integer status codes should be converted to keywords."
+  [s]
+  (cond (re-matches #"\d{3}" s) (Long/parseLong s)
+        (= "default" s) (keyword s)
+        :else s))
+
+(defn media-type->data
+  "Convert a Java Schema's MediaType to a spec that Reitit will accept."
+  [^MediaType mt]
+  (let [schema (.getSchema mt)]
+    {:schema (spec schema)}))
+
+(defn response->data
+  "Convert an ApiResponse to a response conforming to reitit."
+  [^ApiResponse response]
+  ;; TODO: Perhaps handle other ApiResponse fields as well?
+  (let [orig-content (.getContent response)
+        maybe-content (linked-hash-map->clj-map String/.toString media-type->data orig-content)
+        ;; if no content then use the nil? schema
+        content (if maybe-content maybe-content {:schema nil?})
+        description (.getDescription response)]
+    (cond-> {:content content}
+      description (assoc :description description))))
+
 (defn operation->data
-  "Converts an Operation to map of parameters, schemas and handler conforming to reitit"
+  "Converts a Java Operation to a map of parameters, responses, schemas and handler
+  that conforms to reitit."
   [^Operation op handlers]
   (let [params       (into [] (.getParameters op))
         request-body (.getRequestBody op)
@@ -171,10 +224,12 @@
                           (apply merge-with into)
                           (wrap-map :path)
                           (wrap-map :query)
-                          (wrap-map :header))]
+                          (wrap-map :header))
+        responses    (->> (.getResponses op)
+                          (linked-hash-map->clj-map handle-response-key response->data)) ]
     (cond-> {:handler (get handlers (.getOperationId op))}
-      (seq schemas)
-      (assoc :parameters schemas))))
+      (seq schemas) (assoc :parameters schemas)
+      (seq responses) (assoc :responses responses))))
 
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
