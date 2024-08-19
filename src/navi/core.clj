@@ -5,7 +5,6 @@
 ; https://opensource.org/licenses/MIT.
 
 (ns navi.core
-  (:require [clojure.string :as str])
   (:import [java.util LinkedHashMap Map$Entry]
            [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
@@ -79,7 +78,7 @@
       "null")))
 
 (defmethod spec
-  "string"
+<  "string"
   [^Schema schema]
   (if (= "uuid" (.getFormat schema))
     uuid?
