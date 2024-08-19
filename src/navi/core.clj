@@ -78,7 +78,7 @@
       "null")))
 
 (defmethod spec
-<  "string"
+  "string"
   [^Schema schema]
   (if (= "uuid" (.getFormat schema))
     uuid?
