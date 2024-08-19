@@ -197,14 +197,22 @@
   (let [schema (.getSchema mt)]
     {:schema (spec schema)}))
 
+(defn handle-media-type-key
+  "If the media type is \"default\", then return it as a keyword, otherwise pass through."
+  [s]
+  (if (= "default" s)
+    (keyword s)
+    s))
+
 (defn response->data
   "Convert an ApiResponse to a response conforming to reitit."
   [^ApiResponse response]
   ;; TODO: Perhaps handle other ApiResponse fields as well?
   (let [orig-content (.getContent response)
-        maybe-content (linked-hash-map->clj-map String/.toString media-type->data orig-content)
-        ;; if no content then use the nil? schema
-        content (if maybe-content maybe-content {:schema nil?})
+        ;; if no content then use the nil? schema with a default media type
+        content (if orig-content
+                  (linked-hash-map->clj-map handle-media-type-key media-type->data orig-content)
+                  {:default {:schema nil?}})
         description (.getDescription response)]
     (cond-> {:content content}
       description (assoc :description description))))
