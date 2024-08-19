@@ -18,6 +18,8 @@
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
+(set! *warn-on-reflection* true)
+
 (declare spec)
 
 ;; TODO: Better
