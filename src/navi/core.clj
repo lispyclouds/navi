@@ -209,13 +209,13 @@
 (defn response->data
   "Convert an ApiResponse to a response conforming to reitit."
   [^ApiResponse response]
-  ;; TODO: Perhaps handle other ApiResponse fields as well?
   (let [orig-content (.getContent response)
         ;; if no content then use the nil? schema with a default media type
         content (if orig-content
                   (linked-hash-map->clj-map handle-media-type-key media-type->data orig-content)
                   {:default {:schema nil?}})
         description (.getDescription response)]
+    ;; TODO: Perhaps handle other ApiResponse fields as well?
     (cond-> {:content content}
       description (assoc :description description))))
 
