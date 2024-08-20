@@ -75,9 +75,7 @@
 
 (defmulti spec
   (fn [^Schema schema]
-    (if-let [x (first (.getTypes schema))]
-      x
-      "null")))
+    (or (first (.getTypes schema)) "null")))
 
 (defmethod spec
   "string"
@@ -171,7 +169,9 @@
 ;;; Handle reponses
 
 (defn linked-hash-map->clj-map
-  "Convert a Java LinkedHashMap to a Clojure map.
+  "Convert a Java LinkedHashMap to a Clojure Map,
+  using `key-fn` and `val-fn`.
+  Only the top-level keys and values are converted.
   Preserve nils."
   [key-fn val-fn ^LinkedHashMap hm]
   (if (nil? hm)
@@ -184,26 +184,25 @@
 
 (defn handle-response-key
   "Reitit seems to want status codes of a response to be integer keys,
-  rather than keyword keys - except for :default.
+  rather than keyword keys or string keys - except for :default.
   So, convert a string to a Long if relevant.
   If the string is \"default\" then return it as a keyword, otherwise pass through.
   Arguably, all non-integer status codes should be converted to keywords."
   [s]
   (cond (re-matches #"\d{3}" s) (Long/parseLong s)
-        (= "default" s) (keyword s)
+        (= "default" s) :default
         :else s))
 
 (defn media-type->data
   "Convert a Java Schema's MediaType to a spec that Reitit will accept."
   [^MediaType mt]
-  (let [schema (.getSchema mt)]
-    {:schema (spec schema)}))
+  {:schema (spec (.getSchema mt))})
 
 (defn handle-media-type-key
   "If the media type is \"default\", then return it as a keyword, otherwise pass through."
   [s]
   (if (= "default" s)
-    (keyword s)
+    :default
     s))
 
 (defn response->data
