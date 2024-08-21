@@ -12,12 +12,11 @@ Experimental
 
 - Read OpenAPI 3 definitions as JSON or YAML
 - Remote and relative [refs](https://swagger.io/docs/specification/using-ref/)
-- Request coercions powered by [Malli](https://github.com/metosin/malli)
+- Request and response coercions powered by [Malli](https://github.com/metosin/malli)
 - requestBody coercion
 - A fair set of OpenAPI types are currently supported, please raise an issue if something is unsupported
 
 Currently unsupported:
-- Response coercions
 - Other coercion libs
 
 Any contributions are much much welcome and appreciated!
