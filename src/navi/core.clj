@@ -19,8 +19,6 @@
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
-(set! *warn-on-reflection* true)
-
 (declare spec)
 
 ;; TODO: Better
@@ -34,10 +32,9 @@
 (defn update-kvs
   "Update a map using `key-fn` and `val-fn`.
   Sort of like composing `update-keys` and `update-vals`.
-  Unlike `update-keys` or `update-vals`, preserve nils."
+  Unlike `update-keys` or `update-vals`, preserve `nil`s."
   [m key-fn val-fn]
-  (if (nil? m)
-    nil
+  (when m
     (reduce-kv (fn kv-mapper [m k v]
                  (assoc m (key-fn k) (val-fn v)))
                {}

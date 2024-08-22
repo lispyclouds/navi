@@ -14,8 +14,6 @@
            [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]
            [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]))
 
-(set! *warn-on-reflection* true)
-
 (deftest map-to-malli-spec
   (testing "surrounding values of a clojure map to a malli map spec"
     (is (= {:path [:map [:x string?] [:y int?]]}
