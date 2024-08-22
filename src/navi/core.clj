@@ -5,7 +5,7 @@
 ; https://opensource.org/licenses/MIT.
 
 (ns navi.core
-  (:import [java.util LinkedHashMap Map$Entry]
+  (:import [java.util Map$Entry]
            [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
             HeaderParameter
@@ -14,7 +14,8 @@
             Parameter]
            [io.swagger.v3.oas.models.responses ApiResponse]
            [io.swagger.v3.oas.models Operation
-            PathItem]
+            PathItem
+            PathItem$HttpMethod]
            [io.swagger.v3.parser OpenAPIV3Parser]
            [io.swagger.v3.parser.core.models ParseOptions]))
 
@@ -29,6 +30,18 @@
   (cond-> m
     (contains? m k)
     (update-in [k] #(into [:map] %))))
+
+(defn update-kvs
+  "Update a map using `key-fn` and `val-fn`.
+  Sort of like composing `update-keys` and `update-vals`.
+  Unlike `update-keys` or `update-vals`, preserve nils."
+  [m key-fn val-fn]
+  (if (nil? m)
+    nil
+    (reduce-kv (fn kv-mapper [m k v]
+                 (assoc m (key-fn k) (val-fn v)))
+               {}
+               m)))
 
 (defn schema->spec [^Schema schema]
   (let [types (.getTypes schema)]
@@ -168,25 +181,11 @@
 
 ;;; Handle reponses
 
-(defn linked-hash-map->clj-map
-  "Convert a Java LinkedHashMap to a Clojure Map,
-  using `key-fn` and `val-fn`.
-  Only the top-level keys and values are converted.
-  Preserve nils."
-  [key-fn val-fn ^LinkedHashMap hm]
-  (if (nil? hm)
-    nil
-    (into {}
-          (map (fn lhm-mapper [map-entry]
-                 (vector (key-fn (.getKey ^Map$Entry map-entry))
-                         (val-fn (.getValue ^Map$Entry map-entry))))
-               hm))))
-
 (defn handle-response-key
   "Reitit seems to want status codes of a response to be integer keys,
-  rather than keyword keys or string keys - except for :default.
+  rather than keyword keys or string keys (except for `:default`).
   So, convert a string to a Long if relevant.
-  If the string is \"default\" then return it as a keyword, otherwise pass through.
+  Else if the string is \"default\", then return `:default`, otherwise pass through.
   Arguably, all non-integer status codes should be converted to keywords."
   [s]
   (cond (re-matches #"\d{3}" s) (Long/parseLong s)
@@ -209,9 +208,11 @@
   "Convert an ApiResponse to a response conforming to reitit."
   [^ApiResponse response]
   (let [orig-content (.getContent response)
-        ;; if no content then use the nil? schema with a default media type
+        ;; If no content then use the nil? schema with a default media type.
+        ;; This is a work-around for a current Reitit bug.
+        ;; See https://github.com/metosin/reitit/issues/691
         content (if orig-content
-                  (linked-hash-map->clj-map handle-media-type-key media-type->data orig-content)
+                  (update-kvs orig-content handle-media-type-key media-type->data)
                   {:default {:schema nil?}})
         description (.getDescription response)]
     ;; TODO: Perhaps handle other ApiResponse fields as well?
@@ -233,8 +234,8 @@
                           (wrap-map :path)
                           (wrap-map :query)
                           (wrap-map :header))
-        responses    (->> (.getResponses op)
-                          (linked-hash-map->clj-map handle-response-key response->data)) ]
+        responses    (-> (.getResponses op)
+                         (update-kvs handle-response-key response->data)) ]
     (cond-> {:handler (get handlers (.getOperationId op))}
       (seq schemas) (assoc :parameters schemas)
       (seq responses) (assoc :responses responses))))
@@ -242,31 +243,19 @@
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
   [^PathItem path-item handlers]
-  (->> path-item
-       .readOperationsMap
-       (map #(vector (-> ^Map$Entry %
-                         .getKey
-                         .toString
-                         .toLowerCase
-                         keyword)
-                     (-> ^Map$Entry %
-                         .getValue
-                         (operation->data handlers))))
-       (into {})))
+  (update-kvs (.readOperationsMap path-item)
+              #(keyword (.toLowerCase (.toString ^PathItem$HttpMethod %)))
+              #(operation->data % handlers)))
 
 (defn routes-from
   "Takes in the OpenAPI JSON/YAML as string and a map of OperationId to handler fns.
    Returns the reitit route map with malli schemas"
   [^String api-spec handlers]
   (let [parse-options (doto (ParseOptions.)
-                        (.setResolveFully true))]
-    (->> (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
-         .getOpenAPI
-         .getPaths
-         (mapv #(vector (.getKey ^Map$Entry %)
-                        (-> ^Map$Entry %
-                            .getValue
-                            (path-item->data handlers)))))))
+                        (.setResolveFully true))
+        contents (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
+        paths (.getPaths (.getOpenAPI contents))]
+    (mapv identity (update-kvs paths identity #(path-item->data % handlers)))))
 
 (comment
   (require '[clojure.pprint :as pp])
