@@ -11,7 +11,8 @@
            [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema JsonSchema
             NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
-           [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]))
+           [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]
+           [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]))
 
 (deftest map-to-malli-spec
   (testing "surrounding values of a clojure map to a malli map spec"
@@ -126,6 +127,31 @@
       (is (#{[:or string? int?] [:or int? string?]}
            (core/schema->spec strint))))))
 
+(deftest responses-to-malli-spec
+  (testing "empty response"
+    (let [response (ApiResponse.)]
+      (is (= {:content {:default {:schema nil?}}}
+             (core/response->data response)))))
+  (testing "default media type"
+    (let [media (doto (MediaType.)
+                       (.setSchema (StringSchema.)))
+          content (doto (Content.)
+                    (.put "default" media))
+          response (doto (ApiResponse.)
+                     (.setContent content)) ]
+      (is (= {:content {:default {:schema string?}}}
+             (core/response->data response)))))
+  (testing "json object response"
+    (let [media (doto (MediaType.)
+                       (.setSchema (ObjectSchema.)))
+          content (doto (Content.)
+                    (.put "application/json" media))
+          response (doto (ApiResponse.)
+                     (.setContent content)) ]
+      (is (= {:content {"application/json" {:schema [:map {:closed false}]}}}
+             (core/response->data response)))))
+    )
+
 (deftest parameters-to-malli-spec
   (testing "path"
     (let [param (doto (PathParameter.)
@@ -185,13 +211,22 @@
           hparam    (doto (HeaderParameter.)
                       (.setName "y")
                       (.setSchema (StringSchema.)))
+          response  (doto (ApiResponse.)
+                      (.setContent (doto (Content.)
+                                     (.put "application/json"
+                                           (doto (MediaType.)
+                                             (.setSchema (ObjectSchema.)))))))
+          responses (doto (ApiResponses.)
+                      (.put "200" response))
           operation (doto (Operation.)
                       (.setParameters [param hparam])
+                      (.setResponses responses)
                       (.setOperationId "TestOp"))
           handlers  {"TestOp" "a handler"}]
       (is (= {:handler    "a handler"
               :parameters {:path [:map [:x int?]]
-                           :header [:map [:y {:optional true} string?]]}}
+                           :header [:map [:y {:optional true} string?]]}
+              :responses {200 {:content {"application/json" {:schema [:map {:closed false}]}}}}}
              (core/operation->data operation handlers))))))
 
 (deftest openapi-path-to-malli-spec
