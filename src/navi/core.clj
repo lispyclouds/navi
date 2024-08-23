@@ -5,7 +5,9 @@
 ; https://opensource.org/licenses/MIT.
 
 (ns navi.core
-  (:import [java.util Map$Entry]
+  (:import [io.swagger.v3.oas.models Operation
+            PathItem
+            PathItem$HttpMethod]
            [io.swagger.v3.oas.models.media MediaType Schema]
            [io.swagger.v3.oas.models.parameters PathParameter
             HeaderParameter
@@ -13,11 +15,9 @@
             RequestBody
             Parameter]
            [io.swagger.v3.oas.models.responses ApiResponse]
-           [io.swagger.v3.oas.models Operation
-            PathItem
-            PathItem$HttpMethod]
            [io.swagger.v3.parser OpenAPIV3Parser]
-           [io.swagger.v3.parser.core.models ParseOptions]))
+           [io.swagger.v3.parser.core.models ParseOptions]
+           [java.util Map$Entry]))
 
 (declare spec)
 
@@ -58,7 +58,7 @@
   "Given a property and a required keys set, returns a malli spec.
    Intended for RequestBody"
   [required ^Map$Entry property]
-  (let [k          (.getKey property)
+  (let [k (.getKey property)
         key-schema [(keyword k)]
         key-schema (if (contains? required k)
                      key-schema
@@ -126,10 +126,10 @@
   (let [required (->> schema
                       .getRequired
                       (into #{}))
-        schemas  (->> schema
-                      .getProperties
-                      (map #(->prop-schema required %))
-                      (into []))]
+        schemas (->> schema
+                     .getProperties
+                     (map #(->prop-schema required %))
+                     (into []))]
     (into [:map {:closed false}] schemas)))
 
 (defmethod spec
@@ -169,9 +169,9 @@
                                .stream
                                .findFirst
                                .get)
-        body-spec          (-> content
-                               .getSchema
-                               schema->spec)]
+        body-spec (-> content
+                      .getSchema
+                      schema->spec)]
     {:body (if (.getRequired param)
              body-spec
              [:or nil? body-spec])}))
@@ -220,19 +220,19 @@
   "Converts a Java Operation to a map of parameters, responses, schemas and handler
   that conforms to reitit."
   [^Operation op handlers]
-  (let [params       (into [] (.getParameters op))
+  (let [params (into [] (.getParameters op))
         request-body (.getRequestBody op)
-        params       (if (nil? request-body)
-                       params
-                       (conj params request-body))
-        schemas      (->> params
-                          (map param->data)
-                          (apply merge-with into)
-                          (wrap-map :path)
-                          (wrap-map :query)
-                          (wrap-map :header))
-        responses    (-> (.getResponses op)
-                         (update-kvs handle-response-key response->data)) ]
+        params (if (nil? request-body)
+                 params
+                 (conj params request-body))
+        schemas (->> params
+                     (map param->data)
+                     (apply merge-with into)
+                     (wrap-map :path)
+                     (wrap-map :query)
+                     (wrap-map :header))
+        responses (-> (.getResponses op)
+                      (update-kvs handle-response-key response->data))]
     (cond-> {:handler (get handlers (.getOperationId op))}
       (seq schemas) (assoc :parameters schemas)
       (seq responses) (assoc :responses responses))))
@@ -260,15 +260,15 @@
   (set! *warn-on-reflection* true)
 
   (def handlers
-    {"AddGet"      (fn [{{{:keys [n1 n2]} :path} :parameters}]
-                     {:status 200
-                      :body   (+ n1 n2)})
-     "AddPost"     (fn [{{{:keys [n1 n2]} :body} :parameters}]
-                     {:status 200
-                      :body   (+ n1 n2)})
+    {"AddGet" (fn [{{{:keys [n1 n2]} :path} :parameters}]
+                {:status 200
+                 :body (+ n1 n2)})
+     "AddPost" (fn [{{{:keys [n1 n2]} :body} :parameters}]
+                 {:status 200
+                  :body (+ n1 n2)})
      "HealthCheck" (fn [_]
                      {:status 200
-                      :body   "Ok"})})
+                      :body "Ok"})})
   (-> "api.yaml"
       slurp
       (routes-from handlers)

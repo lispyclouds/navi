@@ -7,12 +7,12 @@
 (ns navi.core-test
   (:require [clojure.test :refer [deftest testing is]]
             [navi.core :as core])
-  (:import [java.util Map LinkedHashMap]
-           [io.swagger.v3.oas.models Operation PathItem]
+  (:import [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema JsonSchema
             NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
            [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]
-           [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]))
+           [io.swagger.v3.oas.models.responses ApiResponses ApiResponse]
+           [java.util Map LinkedHashMap]))
 
 (deftest map-to-malli-spec
   (testing "surrounding values of a clojure map to a malli map spec"
@@ -80,18 +80,18 @@
     (let [props (doto (LinkedHashMap.)
                   (.put "x" (IntegerSchema.))
                   (.put "y" (StringSchema.)))
-          obj   (doto (ObjectSchema.)
-                  (.setRequired ["y" "x"])
-                  (.setProperties props))
+          obj (doto (ObjectSchema.)
+                (.setRequired ["y" "x"])
+                (.setProperties props))
           props-json (doto (LinkedHashMap.)
                        (.put "x" (doto (Schema.)
                                    (.addType "integer")))
                        (.put "y" (doto (Schema.)
                                    (.addType "string"))))
-          obj-json   (doto (Schema.)
-                       (.addType "object")
-                       (.setRequired ["y" "x"])
-                       (.setProperties props-json))]
+          obj-json (doto (Schema.)
+                     (.addType "object")
+                     (.setRequired ["y" "x"])
+                     (.setProperties props-json))]
       (is (= [:map {:closed false} [:x int?] [:y string?]]
              (core/schema->spec obj)))
       (is (= [:map {:closed false} [:x int?] [:y string?]]
@@ -134,23 +134,22 @@
              (core/response->data response)))))
   (testing "default media type"
     (let [media (doto (MediaType.)
-                       (.setSchema (StringSchema.)))
+                  (.setSchema (StringSchema.)))
           content (doto (Content.)
                     (.put "default" media))
           response (doto (ApiResponse.)
-                     (.setContent content)) ]
+                     (.setContent content))]
       (is (= {:content {:default {:schema string?}}}
              (core/response->data response)))))
   (testing "json object response"
     (let [media (doto (MediaType.)
-                       (.setSchema (ObjectSchema.)))
+                  (.setSchema (ObjectSchema.)))
           content (doto (Content.)
                     (.put "application/json" media))
           response (doto (ApiResponse.)
-                     (.setContent content)) ]
+                     (.setContent content))]
       (is (= {:content {"application/json" {:schema [:map {:closed false}]}}}
-             (core/response->data response)))))
-    )
+             (core/response->data response))))))
 
 (deftest parameters-to-malli-spec
   (testing "path"
@@ -174,56 +173,56 @@
       (is (= {:header [[:x int?]]}
              (core/param->data param)))))
   (testing "required request body"
-    (let [media   (doto (MediaType.)
-                    (.setSchema (ObjectSchema.)))
+    (let [media (doto (MediaType.)
+                  (.setSchema (ObjectSchema.)))
           content (doto (Content.)
                     (.put "application/json" media))
-          param   (doto (RequestBody.)
-                    (.setRequired true)
-                    (.setContent content))]
+          param (doto (RequestBody.)
+                  (.setRequired true)
+                  (.setContent content))]
       (is (= {:body [:map {:closed false}]}
              (core/param->data param)))))
   (testing "optional request body"
-    (let [media   (doto (MediaType.)
-                    (.setSchema (ObjectSchema.)))
+    (let [media (doto (MediaType.)
+                  (.setSchema (ObjectSchema.)))
           content (doto (Content.)
                     (.put "application/json" media))
-          param   (doto (RequestBody.)
-                    (.setRequired false)
-                    (.setContent content))]
+          param (doto (RequestBody.)
+                  (.setRequired false)
+                  (.setContent content))]
       (is (= {:body [:or nil? [:map {:closed false}]]}
              (core/param->data param)))))
   (testing "implicitly optional request body"
-    (let [media   (doto (MediaType.)
-                    (.setSchema (ObjectSchema.)))
+    (let [media (doto (MediaType.)
+                  (.setSchema (ObjectSchema.)))
           content (doto (Content.)
                     (.put "application/json" media))
-          param   (doto (RequestBody.)
-                    (.setContent content))]
+          param (doto (RequestBody.)
+                  (.setContent content))]
       (is (= {:body [:or nil? [:map {:closed false}]]}
              (core/param->data param))))))
 
 (deftest openapi-operation-to-malli-spec
   (testing "OpenAPI operation to reitit ring handler"
-    (let [param     (doto (PathParameter.)
-                      (.setName "x")
-                      (.setSchema (IntegerSchema.)))
-          hparam    (doto (HeaderParameter.)
-                      (.setName "y")
-                      (.setSchema (StringSchema.)))
-          response  (doto (ApiResponse.)
-                      (.setContent (doto (Content.)
-                                     (.put "application/json"
-                                           (doto (MediaType.)
-                                             (.setSchema (ObjectSchema.)))))))
+    (let [param (doto (PathParameter.)
+                  (.setName "x")
+                  (.setSchema (IntegerSchema.)))
+          hparam (doto (HeaderParameter.)
+                   (.setName "y")
+                   (.setSchema (StringSchema.)))
+          response (doto (ApiResponse.)
+                     (.setContent (doto (Content.)
+                                    (.put "application/json"
+                                          (doto (MediaType.)
+                                            (.setSchema (ObjectSchema.)))))))
           responses (doto (ApiResponses.)
                       (.put "200" response))
           operation (doto (Operation.)
                       (.setParameters [param hparam])
                       (.setResponses responses)
                       (.setOperationId "TestOp"))
-          handlers  {"TestOp" "a handler"}]
-      (is (= {:handler    "a handler"
+          handlers {"TestOp" "a handler"}]
+      (is (= {:handler "a handler"
               :parameters {:path [:map [:x int?]]
                            :header [:map [:y {:optional true} string?]]}
               :responses {200 {:content {"application/json" {:schema [:map {:closed false}]}}}}}
@@ -231,15 +230,15 @@
 
 (deftest openapi-path-to-malli-spec
   (testing "OpenAPI path to reitit route"
-    (let [param     (doto (PathParameter.)
-                      (.setName "x")
-                      (.setSchema (IntegerSchema.)))
+    (let [param (doto (PathParameter.)
+                  (.setName "x")
+                  (.setSchema (IntegerSchema.)))
           operation (doto (Operation.)
                       (.setParameters [param])
                       (.setOperationId "TestOp"))
-          handlers  {"TestOp" "a handler"}
+          handlers {"TestOp" "a handler"}
           path-item (doto (PathItem.)
                       (.setGet operation))]
-      (is (= {:get {:handler    "a handler"
+      (is (= {:get {:handler "a handler"
                     :parameters {:path [:map [:x int?]]}}}
              (core/path-item->data path-item handlers))))))
