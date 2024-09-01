@@ -244,7 +244,7 @@
     (catch Exception e
       (throw (ex-info (str "Exception processing operation "
                            (pr-str (.getOperationId op))
-                           ": "(ex-message e))
+                           ": " (ex-message e))
                       {:operation op}
                       e)))))
 

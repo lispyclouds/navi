@@ -4,10 +4,6 @@ A tiny library converting [OpenAPI](https://www.openapis.org/) route definitions
 
 Suitable for [spec-first](https://www.atlassian.com/blog/technology/spec-first-api-development) servers.
 
-## Status
-
-Experimental
-
 ## Features
 
 - Read OpenAPI 3 definitions as JSON or YAML
@@ -24,17 +20,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.0.6"]
+[org.clojars.lispyclouds/navi "0.0.7"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.0.6"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.0.7"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.0.6'
+compile 'org.clojars.lispyclouds:navi:0.0.7'
 ```
 
 Maven
@@ -42,7 +38,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.0.6</version>
+  <version>0.0.7</version>
 </dependency>
 ```
 
@@ -197,7 +193,7 @@ Bootstrapping a Jetty server:
 
 deps.edn used for this example:
 ```edn
-{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.6"}
+{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.7"}
         metosin/reitit-core {:mvn/version "0.6.0"}
         metosin/reitit-http {:mvn/version "0.6.0"}
         metosin/reitit-interceptors {:mvn/version "0.6.0"}
