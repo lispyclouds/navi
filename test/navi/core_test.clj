@@ -7,7 +7,8 @@
 (ns navi.core-test
   (:require [clojure.test :refer [deftest testing is]]
             [navi.core :as core])
-  (:import [io.swagger.v3.oas.models Operation PathItem]
+  (:import [clojure.lang ExceptionInfo]
+           [io.swagger.v3.oas.models Operation PathItem]
            [io.swagger.v3.oas.models.media Content StringSchema IntegerSchema JsonSchema
             NumberSchema ObjectSchema ArraySchema MediaType UUIDSchema Schema]
            [io.swagger.v3.oas.models.parameters Parameter PathParameter HeaderParameter QueryParameter RequestBody]
@@ -228,6 +229,30 @@
               :responses {200 {:content {"application/json" {:schema [:map {:closed false}]}}}}}
              (core/operation->data operation handlers))))))
 
+(deftest openapi-operation-to-malli-spec-missing-schema
+  (testing "Missing response schema results in an informative error"
+    (let [param (doto (PathParameter.)
+                  (.setName "x")
+                  (.setSchema (IntegerSchema.)))
+          hparam (doto (HeaderParameter.)
+                   (.setName "y")
+                   (.setSchema (StringSchema.)))
+          response (doto (ApiResponse.)
+                     (.setContent (doto (Content.)
+                                    (.put "application/json" (MediaType.)))))
+          responses (doto (ApiResponses.)
+                      (.put "200" response))
+          operation (doto (Operation.)
+                      (.setParameters [param hparam])
+                      (.setResponses responses)
+                      (.setOperationId "TestOp"))
+          handlers {"TestOp" "a handler"}]
+      (is (thrown-with-msg?
+           ExceptionInfo
+           #".*TestOp.*schema"
+           (core/operation->data operation handlers))
+          "Error message contains operation name and mentions the missing schema"))))
+
 (deftest openapi-path-to-malli-spec
   (testing "OpenAPI path to reitit route"
     (let [param (doto (PathParameter.)
@@ -242,3 +267,19 @@
       (is (= {:get {:handler "a handler"
                     :parameters {:path [:map [:x int?]]}}}
              (core/path-item->data path-item handlers))))))
+
+(deftest openapi-path-to-malli-spec-missing-schema
+  (testing "Missing path parameter schema results in an informative error"
+    (let [param (doto (PathParameter.)
+                  (.setName "x"))
+          operation (doto (Operation.)
+                      (.setParameters [param])
+                      (.setOperationId "TestOp"))
+          handlers {"TestOp" "a handler"}
+          path-item (doto (PathItem.)
+                      (.setGet operation))]
+      (is (thrown-with-msg?
+           ExceptionInfo
+           #".*TestOp.*schema"
+           (core/path-item->data path-item handlers))
+          "Error message contains operation name and mentions the missing schema"))))
