@@ -41,17 +41,19 @@
                m)))
 
 (defn schema->spec [^Schema schema]
-  (let [types (.getTypes schema)]
-    (if (= 1 (count types))
-      (spec schema)
-      (try
-        (->> (map (fn [type]
-                    (.setTypes schema #{type})
-                    (spec schema))
-                  types)
-             (into [:or]))
-        (finally
-          (.setTypes schema types))))))
+  (if schema
+    (let [types (.getTypes schema)]
+      (if (= 1 (count types))
+        (spec schema)
+        (try
+          (->> (map (fn [type]
+                      (.setTypes schema #{type})
+                      (spec schema))
+                    types)
+               (into [:or]))
+          (finally
+            (.setTypes schema types)))))
+    (throw (ex-info "Missing schema" {}))))
 
 ;; TODO: Better
 (defn ->prop-schema
@@ -192,7 +194,9 @@
 (defn media-type->data
   "Convert a Java Schema's MediaType to a spec that Reitit will accept."
   [^MediaType mt]
-  {:schema (spec (.getSchema mt))})
+  (if-let [schema (some-> mt .getSchema spec)]
+    {:schema schema}
+    (throw (ex-info "MediaType has no schema" {:media-type mt}))))
 
 (defn handle-media-type-key
   "If the media type is \"default\", then return it as a keyword, otherwise pass through."
@@ -220,22 +224,29 @@
   "Converts a Java Operation to a map of parameters, responses, schemas and handler
   that conforms to reitit."
   [^Operation op handlers]
-  (let [params (into [] (.getParameters op))
-        request-body (.getRequestBody op)
-        params (if (nil? request-body)
-                 params
-                 (conj params request-body))
-        schemas (->> params
-                     (map param->data)
-                     (apply merge-with into)
-                     (wrap-map :path)
-                     (wrap-map :query)
-                     (wrap-map :header))
-        responses (-> (.getResponses op)
-                      (update-kvs handle-response-key response->data))]
-    (cond-> {:handler (get handlers (.getOperationId op))}
-      (seq schemas) (assoc :parameters schemas)
-      (seq responses) (assoc :responses responses))))
+  (try
+    (let [params (into [] (.getParameters op))
+          request-body (.getRequestBody op)
+          params (if (nil? request-body)
+                   params
+                   (conj params request-body))
+          schemas (->> params
+                       (map param->data)
+                       (apply merge-with into)
+                       (wrap-map :path)
+                       (wrap-map :query)
+                       (wrap-map :header))
+          responses (-> (.getResponses op)
+                        (update-kvs handle-response-key response->data))]
+      (cond-> {:handler (get handlers (.getOperationId op))}
+        (seq schemas) (assoc :parameters schemas)
+        (seq responses) (assoc :responses responses)))
+    (catch Exception e
+      (throw (ex-info (str "Exception processing operation "
+                           (pr-str (.getOperationId op))
+                           ": "(ex-message e))
+                      {:operation op}
+                      e)))))
 
 (defn path-item->data
   "Converts a path to its corresponding vector of method and the operation map"
