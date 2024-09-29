@@ -85,6 +85,13 @@
               .getSchema
               schema->spec))))
 
+(defn matches-regex?
+  [exp s]
+  (-> exp
+      (re-pattern)
+      (re-matches s)
+      (some?)))
+
 (defmulti spec
   (fn [^Schema schema]
     (or (first (.getTypes schema)) "null")))
@@ -92,9 +99,13 @@
 (defmethod spec
   "string"
   [^Schema schema]
-  (if (= "uuid" (.getFormat schema))
-    uuid?
-    string?))
+  (let [content-fn (if (= "uuid" (.getFormat schema))
+                     uuid?
+                     string?)
+        pattern (.getPattern schema)]
+    (if pattern
+      [:and content-fn [:fn #(matches-regex? pattern %)]]
+      content-fn)))
 
 (defmethod spec
   "integer"
@@ -283,4 +294,6 @@
   (-> "api.yaml"
       slurp
       (routes-from handlers)
-      pp/pprint))
+      pp/pprint)
+
+  (matches-regex? "^(\\d+)([KMGTPE]i{0,1})$" "1024Mi"))

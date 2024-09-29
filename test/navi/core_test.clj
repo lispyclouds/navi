@@ -121,12 +121,20 @@
            (core/schema->spec (doto (Schema.)
                                 (.addType "string")
                                 (.setFormat "uuid"))))))
-
   (testing "jsonschemas with multiple types"
     (let [strint (-> (JsonSchema.)
                      (.types #{"string" "integer"}))]
       (is (#{[:or string? int?] [:or int? string?]}
-           (core/schema->spec strint))))))
+           (core/schema->spec strint)))))
+  (testing "regex string"
+    (let [[kw1 fn1 [kw2 fn2]] (core/schema->spec (doto (Schema.)
+                                                   (.addType "string")
+                                                   (.setPattern "^(\\d+)([KMGTPE]i{0,1})$")))]
+      (is (= :and kw1))
+      (is (= string? fn1))
+      (is (= :fn kw2))
+      (is (fn2 "1024Ki"))
+      (is (not (fn2 "1024Kib"))))))
 
 (deftest responses-to-malli-spec
   (testing "empty response"
