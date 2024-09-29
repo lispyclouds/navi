@@ -10,7 +10,8 @@ Suitable for [spec-first](https://www.atlassian.com/blog/technology/spec-first-a
 - Remote and relative [refs](https://swagger.io/docs/specification/using-ref/)
 - Request and response coercions powered by [Malli](https://github.com/metosin/malli)
 - requestBody coercion
-- A fair set of OpenAPI types are currently supported, please raise an issue if something is unsupported
+- Strings with uuid and pattern types
+- A large subset of OpenAPI types are currently supported, please raise an issue if something is unsupported
 
 Currently unsupported:
 - Other coercion libs
@@ -20,17 +21,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.0.7"]
+[org.clojars.lispyclouds/navi "0.0.8"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.0.7"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.0.8"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.0.7'
+compile 'org.clojars.lispyclouds:navi:0.0.8'
 ```
 
 Maven
@@ -38,7 +39,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.0.7</version>
+  <version>0.0.8</version>
 </dependency>
 ```
 
@@ -193,7 +194,7 @@ Bootstrapping a Jetty server:
 
 deps.edn used for this example:
 ```edn
-{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.7"}
+{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.8"}
         metosin/reitit-core {:mvn/version "0.6.0"}
         metosin/reitit-http {:mvn/version "0.6.0"}
         metosin/reitit-interceptors {:mvn/version "0.6.0"}
