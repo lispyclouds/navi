@@ -210,7 +210,7 @@ deps.edn used for this example:
 - Clojure [tools.deps](https://clojure.org/guides/getting_started)
 
 ### Running tests locally
-- `clojure -M:test` to run all tests
+- `clojure -X:test` to run all tests
 
 ## License
 

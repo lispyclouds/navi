@@ -127,14 +127,14 @@
       (is (#{[:or string? int?] [:or int? string?]}
            (core/schema->spec strint)))))
   (testing "regex string"
-    (let [[kw1 fn1 [kw2 fn2]] (core/schema->spec (doto (Schema.)
-                                                   (.addType "string")
-                                                   (.setPattern "^(\\d+)([KMGTPE]i{0,1})$")))]
-      (is (= :and kw1))
-      (is (= string? fn1))
-      (is (= :fn kw2))
-      (is (fn2 "1024Ki"))
-      (is (not (fn2 "1024Kib"))))))
+    (let [[kw f regex] (core/schema->spec (doto (Schema.)
+                                            (.addType "string")
+                                            (.setPattern "^(\\d+)([KMGTPE]i{0,1})$")))]
+      (is (= :and kw))
+      (is (= string? f))
+      (is (instance? java.util.regex.Pattern regex))
+      (is (some? (re-matches regex "1024Ki")))
+      (is (nil? (re-matches regex "1024Kib"))))))
 
 (deftest responses-to-malli-spec
   (testing "empty response"

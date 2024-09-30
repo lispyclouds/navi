@@ -85,13 +85,6 @@
               .getSchema
               schema->spec))))
 
-(defn matches-regex?
-  [exp s]
-  (-> exp
-      (re-pattern)
-      (re-matches s)
-      (some?)))
-
 (defmulti spec
   (fn [^Schema schema]
     (or (first (.getTypes schema)) "null")))
@@ -104,7 +97,7 @@
                      string?)
         pattern (.getPattern schema)]
     (if pattern
-      [:and content-fn [:fn #(matches-regex? pattern %)]]
+      [:and content-fn (re-pattern pattern)]
       content-fn)))
 
 (defmethod spec
