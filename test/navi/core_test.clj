@@ -6,6 +6,7 @@
 
 (ns navi.core-test
   (:require [clojure.test :refer [deftest testing is]]
+            [malli.core :as m]
             [navi.core :as core])
   (:import [clojure.lang ExceptionInfo]
            [io.swagger.v3.oas.models Operation PathItem]
@@ -127,14 +128,21 @@
       (is (#{[:or string? int?] [:or int? string?]}
            (core/schema->spec strint)))))
   (testing "regex string"
-    (let [[kw f regex] (core/schema->spec (doto (Schema.)
-                                            (.addType "string")
-                                            (.setPattern "^(\\d+)([KMGTPE]i{0,1})$")))]
-      (is (= :and kw))
-      (is (= string? f))
-      (is (instance? java.util.regex.Pattern regex))
-      (is (some? (re-matches regex "1024Ki")))
-      (is (nil? (re-matches regex "1024Kib"))))))
+    (let [spec (core/schema->spec (doto (Schema.)
+                                    (.addType "string")
+                                    (.setPattern "^(\\d+)([KMGTPE]i{0,1})$")))]
+      (is (m/validate spec "1024Ki"))
+      (is (not (m/validate spec "1024Kib"))))
+    (testing "minLength and maxLength"
+      (let [spec (core/schema->spec (doto (Schema.)
+                                      (.addType "string")
+                                      (.setMinLength (int 3))
+                                      (.setMaxLength (int 8))))]
+        (is (not (m/validate spec "")))
+        (is (not (m/validate spec "1")))
+        (is (m/validate spec "123"))
+        (is (m/validate spec "12345678"))
+        (is (not (m/validate spec "123456789")))))))
 
 (deftest responses-to-malli-spec
   (testing "empty response"

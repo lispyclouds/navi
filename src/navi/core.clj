@@ -95,10 +95,26 @@
   (let [content-fn (if (= "uuid" (.getFormat schema))
                      uuid?
                      string?)
-        pattern (.getPattern schema)]
-    (if pattern
-      [:and content-fn (re-pattern pattern)]
-      content-fn)))
+        max-length (.getMaxLength schema)
+        min-length (.getMinLength schema)
+        properties (cond-> nil
+                     max-length (assoc :max max-length)
+                     min-length (assoc :min min-length))
+        pattern (some-> schema .getPattern re-pattern)]
+    (cond
+      (and properties pattern)
+      [:and content-fn [:string properties] pattern]
+
+      (and properties (= string? content-fn))
+      [:string properties]
+
+      properties
+      [:and content-fn [:string properties]]
+
+      pattern
+      [:and content-fn pattern]
+
+      :else content-fn)))
 
 (defmethod spec
   "integer"
