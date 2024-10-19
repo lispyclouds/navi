@@ -21,17 +21,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.0.9"]
+[org.clojars.lispyclouds/navi "0.0.10"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.0.9"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.0.10"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.0.9'
+compile 'org.clojars.lispyclouds:navi:0.0.10'
 ```
 
 Maven
@@ -39,7 +39,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.0.9</version>
+  <version>0.0.10</version>
 </dependency>
 ```
 
@@ -194,7 +194,7 @@ Bootstrapping a Jetty server:
 
 deps.edn used for this example:
 ```edn
-{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.9"}
+{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.0.10"}
         metosin/reitit-core {:mvn/version "0.6.0"}
         metosin/reitit-http {:mvn/version "0.6.0"}
         metosin/reitit-interceptors {:mvn/version "0.6.0"}
