@@ -5,19 +5,19 @@
 ; https://opensource.org/licenses/MIT.
 
 (ns navi.core
-  (:import [io.swagger.v3.oas.models Operation
-            PathItem
-            PathItem$HttpMethod]
-           [io.swagger.v3.oas.models.media MediaType Schema]
-           [io.swagger.v3.oas.models.parameters PathParameter
-            HeaderParameter
-            QueryParameter
-            RequestBody
-            Parameter]
-           [io.swagger.v3.oas.models.responses ApiResponse]
-           [io.swagger.v3.parser OpenAPIV3Parser]
-           [io.swagger.v3.parser.core.models ParseOptions]
-           [java.util Map$Entry]))
+  (:import
+   [io.swagger.v3.oas.models Operation PathItem PathItem$HttpMethod]
+   [io.swagger.v3.oas.models.media ComposedSchema MediaType Schema]
+   [io.swagger.v3.oas.models.parameters
+    HeaderParameter
+    Parameter
+    PathParameter
+    QueryParameter
+    RequestBody]
+   [io.swagger.v3.oas.models.responses ApiResponse]
+   [io.swagger.v3.parser OpenAPIV3Parser]
+   [io.swagger.v3.parser.core.models ParseOptions]
+   [java.util Map$Entry]))
 
 (declare spec)
 
@@ -40,20 +40,39 @@
                {}
                m)))
 
+; TODO: support oneOf
+(defn decompose
+  [^ComposedSchema schema]
+  (let [[schemas composition] (cond
+                                (< 0 (count (.getAnyOf schema)))
+                                [(.getAnyOf schema) :or]
+
+                                (< 0 (count (.getAllOf schema)))
+                                [(.getAllOf schema) :and])]
+    (->> schemas
+         (map spec)
+         (into [composition]))))
+
 (defn schema->spec [^Schema schema]
-  (if schema
+  (if-not schema
+    (throw (ex-info "Missing schema" {}))
     (let [types (.getTypes schema)]
-      (if (= 1 (count types))
+      (cond
+        (instance? ComposedSchema schema)
+        (decompose schema)
+
+        (= 1 (count types))
         (spec schema)
+
+        :else
         (try
-          (->> (map (fn [type]
+          (->> types
+               (map (fn [type]
                       (.setTypes schema #{type})
-                      (spec schema))
-                    types)
+                      (spec schema)))
                (into [:or]))
           (finally
-            (.setTypes schema types)))))
-    (throw (ex-info "Missing schema" {}))))
+            (.setTypes schema types)))))))
 
 ;; TODO: Better
 (defn ->prop-schema
@@ -100,7 +119,8 @@
         properties (cond-> nil
                      max-length (assoc :max max-length)
                      min-length (assoc :min min-length))
-        pattern (some-> schema .getPattern re-pattern)]
+        pattern (some-> schema .getPattern re-pattern)
+        enums (.getEnum schema)]
     (cond
       (and properties pattern)
       [:and content-fn [:string properties] pattern]
@@ -113,6 +133,9 @@
 
       pattern
       [:and content-fn pattern]
+
+      (< 0 (count enums))
+      [:and content-fn (into #{} enums)]
 
       :else content-fn)))
 
@@ -303,6 +326,4 @@
   (-> "api.yaml"
       slurp
       (routes-from handlers)
-      pp/pprint)
-
-  (matches-regex? "^(\\d+)([KMGTPE]i{0,1})$" "1024Mi"))
+      pp/pprint))
