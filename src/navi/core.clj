@@ -135,7 +135,7 @@
       [:and content-fn pattern]
 
       (< 0 (count enums))
-      [:and content-fn (into #{} enums)]
+      (into #{} enums)
 
       :else content-fn)))
 
