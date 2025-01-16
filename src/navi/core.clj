@@ -7,7 +7,18 @@
 (ns navi.core
   (:import
    [io.swagger.v3.oas.models Operation PathItem PathItem$HttpMethod]
-   [io.swagger.v3.oas.models.media ComposedSchema MediaType Schema]
+   [io.swagger.v3.oas.models.media
+    ArraySchema
+    BooleanSchema
+    ComposedSchema
+    IntegerSchema
+    JsonSchema
+    MediaType
+    NumberSchema
+    ObjectSchema
+    Schema
+    StringSchema
+    UUIDSchema]
    [io.swagger.v3.oas.models.parameters
     HeaderParameter
     Parameter
@@ -19,7 +30,8 @@
    [io.swagger.v3.parser.core.models ParseOptions]
    [java.util Map$Entry]))
 
-(declare spec)
+(defprotocol Transformable
+  (transform [_]))
 
 ;; TODO: Better
 (defn wrap-map
@@ -40,40 +52,6 @@
                {}
                m)))
 
-; TODO: support oneOf
-(defn decompose
-  [^ComposedSchema schema]
-  (let [[schemas composition] (cond
-                                (< 0 (count (.getAnyOf schema)))
-                                [(.getAnyOf schema) :or]
-
-                                (< 0 (count (.getAllOf schema)))
-                                [(.getAllOf schema) :and])]
-    (->> schemas
-         (map spec)
-         (into [composition]))))
-
-(defn schema->spec [^Schema schema]
-  (if-not schema
-    (throw (ex-info "Missing schema" {}))
-    (let [types (.getTypes schema)]
-      (cond
-        (instance? ComposedSchema schema)
-        (decompose schema)
-
-        (= 1 (count types))
-        (spec schema)
-
-        :else
-        (try
-          (->> types
-               (map (fn [type]
-                      (.setTypes schema #{type})
-                      (spec schema)))
-               (into [:or]))
-          (finally
-            (.setTypes schema types)))))))
-
 ;; TODO: Better
 (defn ->prop-schema
   "Given a property and a required keys set, returns a malli spec.
@@ -87,7 +65,7 @@
     (conj key-schema
           (-> property
               .getValue
-              schema->spec))))
+              transform))))
 
 (defn ->param-schema
   "Given a param applies the similar logic as prop to schema
@@ -102,124 +80,130 @@
     (conj key-spec
           (-> param
               .getSchema
-              schema->spec))))
+              transform))))
 
-(defmulti spec
-  (fn [^Schema schema]
-    (or (first (.getTypes schema)) "null")))
+(extend-protocol Transformable
+  StringSchema
+  (transform [schema]
+    (let [content-fn string?
+          max-length (.getMaxLength schema)
+          min-length (.getMinLength schema)
+          properties (cond-> nil
+                       max-length (assoc :max max-length)
+                       min-length (assoc :min min-length))
+          pattern (some-> schema .getPattern re-pattern)
+          enums (.getEnum schema)]
+      (cond
+        (and properties pattern)
+        [:and content-fn [:string properties] pattern]
 
-(defmethod spec
-  "string"
-  [^Schema schema]
-  (let [content-fn (if (= "uuid" (.getFormat schema))
-                     uuid?
-                     string?)
-        max-length (.getMaxLength schema)
-        min-length (.getMinLength schema)
-        properties (cond-> nil
-                     max-length (assoc :max max-length)
-                     min-length (assoc :min min-length))
-        pattern (some-> schema .getPattern re-pattern)
-        enums (.getEnum schema)]
-    (cond
-      (and properties pattern)
-      [:and content-fn [:string properties] pattern]
+        properties
+        [:and content-fn [:string properties]]
 
-      (and properties (= string? content-fn))
-      [:string properties]
+        pattern
+        [:and content-fn pattern]
 
-      properties
-      [:and content-fn [:string properties]]
+        (< 0 (count enums))
+        (into #{} enums)
 
-      pattern
-      [:and content-fn pattern]
+        :else
+        content-fn)))
 
-      (< 0 (count enums))
-      (into #{} enums)
+  UUIDSchema
+  (transform [_] uuid?)
 
-      :else content-fn)))
+  IntegerSchema
+  (transform [_] int?)
 
-(defmethod spec
-  "integer"
-  [_]
-  int?)
+  NumberSchema
+  (transform [_] number?)
 
-(defmethod spec
-  "number"
-  [_]
-  number?)
+  BooleanSchema
+  (transform [_] boolean?)
 
-(defmethod spec
-  "boolean"
-  [_]
-  boolean?)
+  ;; TODO: Implement onrOf
+  ComposedSchema
+  (transform [schema]
+    (let [[schemas compose-as] (cond
+                                 (< 0 (count (.getAnyOf schema)))
+                                 [(.getAnyOf schema) :or]
 
-; Added in OpenAPI 3.1.0
-(defmethod spec
-  "null"
-  [_]
-  nil?)
+                                 (< 0 (count (.getAllOf schema)))
+                                 [(.getAllOf schema) :and])]
+      (->> schemas
+           (map transform)
+           (into [compose-as]))))
 
-(defmethod spec
+  ObjectSchema
+  (transform [schema]
+    (let [required (->> schema
+                        .getRequired
+                        (into #{}))
+          schemas (->> schema
+                       .getProperties
+                       (map #(->prop-schema required %))
+                       (into []))]
+      (into [:map {:closed false}] schemas)))
+
+  ArraySchema
+  (transform [schema]
+    (let [items (.getItems schema)]
+      [:sequential
+       (if (nil? items)
+         any?
+         (transform items))]))
+
+  JsonSchema
+  (transform [schema]
+    (let [pred {"boolean" boolean?
+                "integer" int?
+                "number" number?
+                "string" string?}]
+      (->> schema
+           .getTypes
+           (map pred)
+           (into [:or]))))
+
+  Schema
+  (transform [schema]
+    (if-let [t (first (.getTypes schema))]
+      (if (= "null" t)
+        nil?
+        (throw (ex-info "Unsupported schema" {:schema schema})))
+      (throw (ex-info "Missing schema" {}))))
+
   nil
-  [_]
-  nil?)
+  (transform [_] any?)
 
-(defmethod spec
-  "object"
-  [^Schema schema]
-  (let [required (->> schema
-                      .getRequired
-                      (into #{}))
-        schemas (->> schema
-                     .getProperties
-                     (map #(->prop-schema required %))
-                     (into []))]
-    (into [:map {:closed false}] schemas)))
-
-(defmethod spec
-  "array"
-  [^Schema schema]
-  (let [items (.getItems schema)]
-    [:sequential
-     (if (nil? items)
-       any?
-       (schema->spec items))]))
-
-(defmulti param->data class)
-
-;; TODO: Better. The extra [] is there to help with merge-with into
-(defmethod param->data
+  ;; TODO: Better. The extra [] is there to help with merge-with into
   PathParameter
-  [param]
-  {:path [(->param-schema param)]})
+  (transform [param]
+    {:path [(->param-schema param)]})
 
-(defmethod param->data
   HeaderParameter
-  [param]
-  {:header [(->param-schema param)]})
+  (transform [param]
+    {:header [(->param-schema param)]})
 
-(defmethod param->data
   QueryParameter
-  [param]
-  {:query [(->param-schema param)]})
+  (transform [param]
+    {:query [(->param-schema param)]})
 
-;; TODO: Handle more kinds of request-bodies
-(defmethod param->data
+  ;; TODO: Handle more kinds of request-bodies
   RequestBody
-  [^RequestBody param]
-  (let [^MediaType content (-> param
-                               .getContent
-                               .values
-                               .stream
-                               .findFirst
-                               .get)
-        body-spec (-> content
-                      .getSchema
-                      schema->spec)]
-    {:body (if (.getRequired param)
-             body-spec
-             [:or nil? body-spec])}))
+  (transform [param]
+    (if-let [content (.getContent param)]
+      (let [^MediaType content (-> content
+                                   .values
+                                   .stream
+                                   .findFirst
+                                   .get)
+            body-spec (-> content
+                          .getSchema
+                          transform)]
+        {:body (if (.getRequired param)
+                 body-spec
+                 [:or nil? body-spec])})
+      {})))
 
 ;;; Handle reponses
 
@@ -237,7 +221,7 @@
 (defn media-type->data
   "Convert a Java Schema's MediaType to a spec that Reitit will accept."
   [^MediaType mt]
-  (if-let [schema (some-> mt .getSchema spec)]
+  (if-let [schema (some-> mt .getSchema transform)]
     {:schema schema}
     (throw (ex-info "MediaType has no schema" {:media-type mt}))))
 
@@ -274,7 +258,7 @@
                    params
                    (conj params request-body))
           schemas (->> params
-                       (map param->data)
+                       (map transform)
                        (apply merge-with into)
                        (wrap-map :path)
                        (wrap-map :query)
