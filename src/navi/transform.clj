@@ -11,7 +11,9 @@
   (:import
    [io.swagger.v3.oas.models.media
     ArraySchema
+    BinarySchema
     BooleanSchema
+    ByteArraySchema
     ComposedSchema
     IntegerSchema
     JsonSchema
@@ -109,13 +111,19 @@
            (map pred)
            (into [:or]))))
 
+  BinarySchema
+  (p/transform [_] any?)
+
+  ByteArraySchema
+  (p/transform [_] any?)
+
   Schema
   (p/transform [schema]
     (if-let [t (first (.getTypes schema))]
       (if (= "null" t)
         nil?
-        (throw (ex-info "Unsupported schema" {:schema schema})))
-      (throw (ex-info "Missing schema" {}))))
+        (throw (Exception. (str "Unsupported schema" schema))))
+      (throw (Exception. "Missing schema"))))
 
   nil
   (p/transform [_] any?)

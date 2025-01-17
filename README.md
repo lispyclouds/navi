@@ -19,7 +19,7 @@ Currently unsupported (raise an issue if needed!):
 - Some string formats:
   - DateTime
   - Email
-  - Binary/File schemas
+  - File
 
 Any contributions are much much welcome and appreciated!
 
