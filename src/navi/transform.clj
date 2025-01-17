@@ -24,6 +24,7 @@
     StringSchema
     UUIDSchema]
    [io.swagger.v3.oas.models.parameters
+    CookieParameter
     HeaderParameter
     PathParameter
     QueryParameter
@@ -117,6 +118,9 @@
   ByteArraySchema
   (p/transform [_] any?)
 
+  nil
+  (p/transform [_] any?)
+
   Schema
   (p/transform [schema]
     (if-let [t (first (.getTypes schema))]
@@ -124,9 +128,6 @@
         nil?
         (throw (Exception. (str "Unsupported schema" schema))))
       (throw (Exception. "Missing schema"))))
-
-  nil
-  (p/transform [_] any?)
 
   ;; TODO: Better. The extra [] is there to help with merge-with into
   PathParameter
@@ -140,6 +141,10 @@
   QueryParameter
   (p/transform [param]
     {:query [(i/->param-schema param)]})
+
+  CookieParameter
+  (p/transform [param]
+    {:cookie [(i/->param-schema param)]})
 
   ;; TODO: Handle more kinds of request-bodies
   RequestBody

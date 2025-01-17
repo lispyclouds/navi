@@ -13,6 +13,8 @@
   (:import
    [io.swagger.v3.oas.models.media
     ArraySchema
+    BinarySchema
+    ByteArraySchema
     ComposedSchema
     Content
     IntegerSchema
@@ -24,6 +26,7 @@
     StringSchema
     UUIDSchema]
    [io.swagger.v3.oas.models.parameters
+    CookieParameter
     HeaderParameter
     PathParameter
     QueryParameter
@@ -70,7 +73,13 @@
       (is (= [:sequential string?]
              (p/transform arr)))
       (is (= [:sequential string?]
-             (p/transform arr-json))))))
+             (p/transform arr-json)))))
+  (testing "byte array"
+    (is (= any? (p/transform (ByteArraySchema.)))))
+  (testing "binary"
+    (is (= any? (p/transform (BinarySchema.)))))
+  (testing "nil"
+    (is (= any? (p/transform nil)))))
 
 (deftest string-formats
   (testing "uuid"
@@ -118,6 +127,13 @@
                   (.setRequired true)
                   (.setSchema (IntegerSchema.)))]
       (is (= {:header [[:x int?]]}
+             (p/transform param)))))
+  (testing "cookie"
+    (let [param (doto (CookieParameter.)
+                  (.setName "x")
+                  (.setRequired true)
+                  (.setSchema (IntegerSchema.)))]
+      (is (= {:cookie [[:x int?]]}
              (p/transform param)))))
   (testing "required request body"
     (let [media (doto (MediaType.)

@@ -20,7 +20,7 @@
                         (.setResolveFully true))
         contents (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
         paths (.getPaths (.getOpenAPI contents))]
-    (mapv identity (i/update-kvs paths identity #(i/path-item->data % handlers)))))
+    (i/update-kvs paths identity #(i/path-item->data % handlers))))
 
 (comment
   (require '[clojure.pprint :as pp])
