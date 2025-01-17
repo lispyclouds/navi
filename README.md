@@ -13,8 +13,13 @@ Suitable for [spec-first](https://www.atlassian.com/blog/technology/spec-first-a
 - Strings with uuid and pattern types
 - A large subset of OpenAPI types are currently supported, please raise an issue if something is unsupported
 
-Currently unsupported:
+Currently unsupported (raise an issue if needed!):
 - Other coercion libs
+- `oneOf` composed schema
+- Some string formats:
+  - DateTime
+  - Email
+  - Binary/File schemas
 
 Any contributions are much much welcome and appreciated!
 
