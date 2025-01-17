@@ -13,6 +13,7 @@
   (:import
    [io.swagger.v3.oas.models.media
     ArraySchema
+    ComposedSchema
     Content
     IntegerSchema
     JsonSchema
@@ -29,7 +30,7 @@
     RequestBody]
    [java.util LinkedHashMap]))
 
-(deftest openapi-schema-to-malli-spec
+(deftest primitives
   (testing "string"
     (is (= string? (p/transform (StringSchema.)))))
   (testing "integer"
@@ -69,7 +70,9 @@
       (is (= [:sequential string?]
              (p/transform arr)))
       (is (= [:sequential string?]
-             (p/transform arr-json)))))
+             (p/transform arr-json))))))
+
+(deftest string-formats
   (testing "uuid"
     (is (= uuid? (p/transform (UUIDSchema.)))))
   (testing "jsonschemas with multiple types"
@@ -89,7 +92,11 @@
         (is (not (m/validate spec "1")))
         (is (m/validate spec "123"))
         (is (m/validate spec "12345678"))
-        (is (not (m/validate spec "123456789")))))))
+        (is (not (m/validate spec "123456789"))))))
+  (testing "enums"
+    (is (= [:enum "foo" "bar" "baz"]
+           (p/transform (doto (StringSchema.)
+                          (.setEnum ["foo" "bar" "baz"])))))))
 
 (deftest parameters-to-malli-spec
   (testing "path"
@@ -141,3 +148,13 @@
                   (.setContent content))]
       (is (= {:body [:or nil? [:map {:closed false}]]}
              (p/transform param))))))
+
+(deftest composed-schemas
+  (testing "anyOf"
+    (is (= [:or string? int?]
+           (p/transform (doto (ComposedSchema.)
+                          (.setAnyOf [(StringSchema.) (IntegerSchema.)]))))))
+  (testing "allOF"
+    (is (= [:and string? int?]
+           (p/transform (doto (ComposedSchema.)
+                          (.setAllOf [(StringSchema.) (IntegerSchema.)])))))))
