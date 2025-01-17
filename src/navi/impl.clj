@@ -118,7 +118,8 @@
                        (apply merge-with into)
                        (wrap-map :path)
                        (wrap-map :query)
-                       (wrap-map :header))
+                       (wrap-map :header)
+                       (wrap-map :cookie))
           responses (-> (.getResponses op)
                         (update-kvs handle-response-key response->data))]
       (cond-> {:handler (get handlers (.getOperationId op))}

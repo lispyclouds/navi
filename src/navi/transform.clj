@@ -77,7 +77,10 @@
                                  [(.getAnyOf schema) :or]
 
                                  (< 0 (count (.getAllOf schema)))
-                                 [(.getAllOf schema) :and])]
+                                 [(.getAllOf schema) :and]
+
+                                 :else
+                                 (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
       (->> schemas
            (map p/transform)
            (into [compose-as]))))
