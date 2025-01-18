@@ -26,17 +26,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.1.0"]
+[org.clojars.lispyclouds/navi "0.1.1"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.1.0"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.1.1"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.1.0'
+compile 'org.clojars.lispyclouds:navi:0.1.1'
 ```
 
 Maven
@@ -44,7 +44,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
@@ -56,7 +56,7 @@ openapi: "3.0.0"
 
 info:
   title: My calculator
-  version: "0.1.0"
+  version: "0.1.1"
   description: My awesome calc!
 
 paths:
@@ -195,19 +195,6 @@ Bootstrapping a Jetty server:
                     :port 7777
                     :join? false
                     :async? true}))
-```
-
-deps.edn used for this example:
-```edn
-{:deps {org.clojars.lispyclouds/navi {:mvn/version "0.1.0"}
-        metosin/reitit-core {:mvn/version "0.6.0"}
-        metosin/reitit-http {:mvn/version "0.6.0"}
-        metosin/reitit-interceptors {:mvn/version "0.6.0"}
-        metosin/reitit-malli {:mvn/version "0.6.0"}
-        metosin/reitit-ring {:mvn/version "0.6.0"}
-        metosin/reitit-sieppari {:mvn/version "0.6.0"}
-        metosin/muuntaja {:mvn/version "0.6.8"}
-        ring/ring-jetty-adapter {:mvn/version "1.9.6"}}}
 ```
 
 ### Build Requirements

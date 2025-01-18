@@ -4,7 +4,7 @@
 ; license that can be found in the LICENSE file or at
 ; https://opensource.org/licenses/MIT.
 
-(defproject org.clojars.lispyclouds/navi "0.1.0"
+(defproject org.clojars.lispyclouds/navi "0.1.1"
   :author "Rahul De <rahul@mailbox.org>"
   :url "https://github.com/lispyclouds/navi"
   :description "A tiny library converting OpenAPI route definitions to Reitit routes."
