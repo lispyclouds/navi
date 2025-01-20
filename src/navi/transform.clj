@@ -48,6 +48,20 @@
        any?
        (p/transform items))]))
 
+(defn- transform-composed [schema]
+  (let [[schemas compose-as] (cond
+                               (< 0 (count (.getAnyOf schema)))
+                               [(.getAnyOf schema) :or]
+  
+                               (< 0 (count (.getAllOf schema)))
+                               [(.getAllOf schema) :and]
+  
+                               :else
+                               (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
+    (->> schemas
+         (map p/transform)
+         (into [compose-as]))))
+
 (extend-protocol p/Transformable
   StringSchema
   (p/transform [schema]
@@ -90,18 +104,7 @@
   ;; TODO: Implement oneOf
   ComposedSchema
   (p/transform [schema]
-    (let [[schemas compose-as] (cond
-                                 (< 0 (count (.getAnyOf schema)))
-                                 [(.getAnyOf schema) :or]
-
-                                 (< 0 (count (.getAllOf schema)))
-                                 [(.getAllOf schema) :and]
-
-                                 :else
-                                 (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
-      (->> schemas
-           (map p/transform)
-           (into [compose-as]))))
+    (transform-composed schema))
 
   ObjectSchema
   (p/transform [schema]
@@ -124,8 +127,9 @@
                    "string" string?
                    (throw (Exception. (str "Unsupported schema" schema)))))
           types (.getTypes schema)]
-      (if (= 1 (count types))
-        (-> types first pred)
+      (case (count types)
+        0 (transform-composed schema)
+        1 (-> types first pred)
         (into [:or] (map pred types)))))
 
   BinarySchema
