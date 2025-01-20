@@ -110,10 +110,11 @@
                 "integer" int?
                 "number" number?
                 "string" string?}]
-      (->> schema
-           .getTypes
-           (map pred)
-           (into [:or]))))
+      (if (= 1 (count (.getTypes schema)))
+        (-> schema .getTypes first pred)
+        (->> schema .getTypes
+             (map pred)
+             (into [:or])))))
 
   BinarySchema
   (p/transform [_] any?)
