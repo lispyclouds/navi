@@ -30,6 +30,24 @@
     QueryParameter
     RequestBody]))
 
+(defn- transform-object
+  [schema]
+  (let [required (->> schema
+                      .getRequired
+                      (into #{}))
+        schemas (->> schema
+                     .getProperties
+                     (map #(i/->prop-schema required %))
+                     (into []))]
+    (into [:map {:closed false}] schemas)))
+
+(defn- transform-array [schema]
+  (let [items (.getItems schema)]
+    [:sequential
+     (if (nil? items)
+       any?
+       (p/transform items))]))
+
 (extend-protocol p/Transformable
   StringSchema
   (p/transform [schema]
@@ -87,30 +105,24 @@
 
   ObjectSchema
   (p/transform [schema]
-    (let [required (->> schema
-                        .getRequired
-                        (into #{}))
-          schemas (->> schema
-                       .getProperties
-                       (map #(i/->prop-schema required %))
-                       (into []))]
-      (into [:map {:closed false}] schemas)))
+    (transform-object schema))
 
   ArraySchema
   (p/transform [schema]
-    (let [items (.getItems schema)]
-      [:sequential
-       (if (nil? items)
-         any?
-         (p/transform items))]))
+    (transform-array schema))
 
   JsonSchema
   (p/transform [schema]
-    (let [pred {"boolean" boolean?
-                "integer" int?
-                "null" nil?
-                "number" number?
-                "string" string?}]
+    (let [pred (fn [type]
+                 (case type
+                   "array" (transform-array schema)
+                   "boolean" boolean?
+                   "integer" int?
+                   "null" nil?
+                   "number" number?
+                   "object" (transform-object schema)
+                   "string" string?
+                   (throw (Exception. (str "Unsupported schema" schema)))))]
       (if (= 1 (count (.getTypes schema)))
         (-> schema .getTypes first pred)
         (->> schema .getTypes

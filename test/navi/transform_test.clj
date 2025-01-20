@@ -56,7 +56,8 @@
           props-json (doto (LinkedHashMap.)
                        (.put "x" (IntegerSchema.))
                        (.put "y" (StringSchema.)))
-          obj-json (doto (ObjectSchema.)
+          obj-json (doto (JsonSchema.)
+                     (.addType "object")
                      (.setRequired ["y" "x"])
                      (.setProperties props-json))]
       (is (= [:map {:closed false} [:x int?] [:y string?]]
@@ -69,7 +70,8 @@
   (testing "array"
     (let [arr (doto (ArraySchema.)
                 (.setItems (StringSchema.)))
-          arr-json (doto (ArraySchema.)
+          arr-json (doto (JsonSchema.)
+                     (.addType "array")
                      (.setItems (StringSchema.)))]
       (is (= [:sequential string?]
              (p/transform arr)))
