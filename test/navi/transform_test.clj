@@ -175,11 +175,13 @@
                           (.setAnyOf [(StringSchema.) (IntegerSchema.)])))))
     (is (= [:or string? int?]
            (p/transform (doto (JsonSchema.)
-                          (.setAnyOf [(.types (JsonSchema.) #{"string"}) (.types (JsonSchema.) #{"integer"})]))))))
+                          (.setAnyOf [(.types (JsonSchema.) #{"string"})
+                                      (.types (JsonSchema.) #{"integer"})]))))))
   (testing "allOf"
     (is (= [:and string? int?]
            (p/transform (doto (ComposedSchema.)
                           (.setAllOf [(StringSchema.) (IntegerSchema.)])))))
     (is (= [:and string? int?]
            (p/transform (doto (JsonSchema.)
-                          (.setAllOf [(.types (JsonSchema.) #{"string"}) (.types (JsonSchema.) #{"integer"})])))))))
+                          (.setAllOf [(.types (JsonSchema.) #{"string"})
+                                      (.types (JsonSchema.) #{"integer"})])))))))

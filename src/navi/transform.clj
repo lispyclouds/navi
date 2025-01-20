@@ -31,7 +31,7 @@
     RequestBody]))
 
 (defn- transform-object
-  [schema]
+  [^ObjectSchema schema]
   (let [required (->> schema
                       .getRequired
                       (into #{}))
@@ -41,22 +41,24 @@
                      (into []))]
     (into [:map {:closed false}] schemas)))
 
-(defn- transform-array [schema]
+(defn- transform-array
+  [^ArraySchema schema]
   (let [items (.getItems schema)]
     [:sequential
      (if (nil? items)
        any?
        (p/transform items))]))
 
-(defn- transform-composed [schema]
+(defn- transform-composed
+  [^ComposedSchema schema]
   (let [[schemas compose-as] (cond
                                (< 0 (count (.getAnyOf schema)))
                                [(.getAnyOf schema) :or]
-  
+
                                (< 0 (count (.getAllOf schema)))
                                [(.getAllOf schema) :and]
-  
-                               :else
+
+                               :else ;; TODO: Implement oneOf
                                (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
     (->> schemas
          (map p/transform)
@@ -101,7 +103,6 @@
   BooleanSchema
   (p/transform [_] boolean?)
 
-  ;; TODO: Implement oneOf
   ComposedSchema
   (p/transform [schema]
     (transform-composed schema))
@@ -116,8 +117,8 @@
 
   JsonSchema
   (p/transform [schema]
-    (let [pred (fn [type]
-                 (case type
+    (let [pred (fn [typ]
+                 (case typ
                    "array" (transform-array schema)
                    "boolean" boolean?
                    "integer" int?
@@ -125,7 +126,7 @@
                    "number" number?
                    "object" (transform-object schema)
                    "string" string?
-                   (throw (Exception. (str "Unsupported schema" schema)))))
+                   (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
           types (.getTypes schema)]
       (case (count types)
         0 (transform-composed schema)
@@ -182,3 +183,6 @@
                  body-spec
                  [:or nil? body-spec])})
       {})))
+
+(comment
+  (set! *warn-on-reflection* true))
