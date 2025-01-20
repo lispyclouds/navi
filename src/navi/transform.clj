@@ -30,6 +30,38 @@
     QueryParameter
     RequestBody]))
 
+(defn- transform-object
+  [schema]
+  (let [required (->> schema
+                      .getRequired
+                      (into #{}))
+        schemas (->> schema
+                     .getProperties
+                     (map #(i/->prop-schema required %))
+                     (into []))]
+    (into [:map {:closed false}] schemas)))
+
+(defn- transform-array [schema]
+  (let [items (.getItems schema)]
+    [:sequential
+     (if (nil? items)
+       any?
+       (p/transform items))]))
+
+(defn- transform-composed [schema]
+  (let [[schemas compose-as] (cond
+                               (< 0 (count (.getAnyOf schema)))
+                               [(.getAnyOf schema) :or]
+  
+                               (< 0 (count (.getAllOf schema)))
+                               [(.getAllOf schema) :and]
+  
+                               :else
+                               (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
+    (->> schemas
+         (map p/transform)
+         (into [compose-as]))))
+
 (extend-protocol p/Transformable
   StringSchema
   (p/transform [schema]
@@ -72,48 +104,33 @@
   ;; TODO: Implement oneOf
   ComposedSchema
   (p/transform [schema]
-    (let [[schemas compose-as] (cond
-                                 (< 0 (count (.getAnyOf schema)))
-                                 [(.getAnyOf schema) :or]
-
-                                 (< 0 (count (.getAllOf schema)))
-                                 [(.getAllOf schema) :and]
-
-                                 :else
-                                 (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
-      (->> schemas
-           (map p/transform)
-           (into [compose-as]))))
+    (transform-composed schema))
 
   ObjectSchema
   (p/transform [schema]
-    (let [required (->> schema
-                        .getRequired
-                        (into #{}))
-          schemas (->> schema
-                       .getProperties
-                       (map #(i/->prop-schema required %))
-                       (into []))]
-      (into [:map {:closed false}] schemas)))
+    (transform-object schema))
 
   ArraySchema
   (p/transform [schema]
-    (let [items (.getItems schema)]
-      [:sequential
-       (if (nil? items)
-         any?
-         (p/transform items))]))
+    (transform-array schema))
 
   JsonSchema
   (p/transform [schema]
-    (let [pred {"boolean" boolean?
-                "integer" int?
-                "number" number?
-                "string" string?}]
-      (->> schema
-           .getTypes
-           (map pred)
-           (into [:or]))))
+    (let [pred (fn [type]
+                 (case type
+                   "array" (transform-array schema)
+                   "boolean" boolean?
+                   "integer" int?
+                   "null" nil?
+                   "number" number?
+                   "object" (transform-object schema)
+                   "string" string?
+                   (throw (Exception. (str "Unsupported schema" schema)))))
+          types (.getTypes schema)]
+      (case (count types)
+        0 (transform-composed schema)
+        1 (-> types first pred)
+        (into [:or] (map pred types)))))
 
   BinarySchema
   (p/transform [_] any?)
