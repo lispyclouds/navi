@@ -108,6 +108,7 @@
   (p/transform [schema]
     (let [pred {"boolean" boolean?
                 "integer" int?
+                "null" nil?
                 "number" number?
                 "string" string?}]
       (if (= 1 (count (.getTypes schema)))

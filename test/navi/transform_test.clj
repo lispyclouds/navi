@@ -41,7 +41,8 @@
   (testing "number"
     (is (= number? (p/transform (NumberSchema.)))))
   (testing "null"
-    (is (= nil? (p/transform (doto (Schema.) (.addType "null"))))))
+    (is (= nil? (p/transform (doto (Schema.) (.addType "null")))))
+    (is (= nil? (p/transform (doto (JsonSchema.) (.addType "null"))))))
   (testing "empty object"
     (is (= [:map {:closed false}]
            (p/transform (ObjectSchema.)))))
