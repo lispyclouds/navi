@@ -41,7 +41,7 @@
       (is (= [:id {:optional true} string?]
              (i/->prop-schema #{"x"} property)))))
   (testing "convert a DateTime OpenAPI Map entry"
-    (let [property (Map/entry "timestamp" (io.swagger.v3.oas.models.media.DateTimeSchema.))]
+    (let [property (Map/entry "timestamp" (.DateTimeSchema.))]
       (is (= [:timestamp inst?]
              (i/->prop-schema #{"timestamp"} property))))))
 
@@ -150,5 +150,3 @@
       (is (= {:get {:handler "a handler"
                     :parameters {:path [:map [:x int?]]}}}
              (i/path-item->data path-item handlers))))))
-
-
