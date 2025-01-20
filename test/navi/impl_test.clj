@@ -29,6 +29,8 @@
     (is (= {:query [:map [:x string?]]}
            (i/wrap-map :path {:query [:map [:x string?]]})))))
 
+
+
 (deftest openapi-properties-to-malli-spec
   (testing "convert a required OpenAPI Map entry"
     (let [property (Map/entry "id" (StringSchema.))]
@@ -37,7 +39,11 @@
   (testing "convert an optional OpenAPI Map entry"
     (let [property (Map/entry "id" (StringSchema.))]
       (is (= [:id {:optional true} string?]
-             (i/->prop-schema #{"x"} property))))))
+             (i/->prop-schema #{"x"} property)))))
+  (testing "convert a DateTime OpenAPI Map entry"
+    (let [property (Map/entry "timestamp" (io.swagger.v3.oas.models.media.DateTimeSchema.))]
+      (is (= [:timestamp inst?]
+             (i/->prop-schema #{"timestamp"} property))))))
 
 (deftest openapi-parameters-to-malli-spec
   (testing "convert a required OpenAPI Parameter"
@@ -53,6 +59,8 @@
                   (.setSchema (StringSchema.)))]
       (is (= [:x {:optional true} string?]
              (i/->param-schema param))))))
+
+
 
 (deftest responses-to-malli-spec
   (testing "empty response"
@@ -142,3 +150,5 @@
       (is (= {:get {:handler "a handler"
                     :parameters {:path [:map [:x int?]]}}}
              (i/path-item->data path-item handlers))))))
+
+

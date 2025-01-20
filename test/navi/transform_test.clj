@@ -17,6 +17,7 @@
     ByteArraySchema
     ComposedSchema
     Content
+    DateTimeSchema
     IntegerSchema
     JsonSchema
     MediaType
@@ -34,6 +35,8 @@
    [java.util LinkedHashMap]))
 
 (deftest primitives
+  (testing "datetime"
+    (is (= inst? (p/transform (DateTimeSchema.)))))
   (testing "string"
     (is (= string? (p/transform (StringSchema.)))))
   (testing "integer"
