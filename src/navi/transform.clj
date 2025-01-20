@@ -122,12 +122,11 @@
                    "number" number?
                    "object" (transform-object schema)
                    "string" string?
-                   (throw (Exception. (str "Unsupported schema" schema)))))]
-      (if (= 1 (count (.getTypes schema)))
-        (-> schema .getTypes first pred)
-        (->> schema .getTypes
-             (map pred)
-             (into [:or])))))
+                   (throw (Exception. (str "Unsupported schema" schema)))))
+          types (.getTypes schema)]
+      (if (= 1 (count types))
+        (-> types first pred)
+        (into [:or] (map pred types)))))
 
   BinarySchema
   (p/transform [_] any?)
