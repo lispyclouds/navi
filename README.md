@@ -26,17 +26,17 @@ Any contributions are much much welcome and appreciated!
 ## Installation
 Leiningen/Boot
 ```clojure
-[org.clojars.lispyclouds/navi "0.1.1"]
+[org.clojars.lispyclouds/navi "0.1.2"]
 ```
 
 Clojure CLI/deps.edn
 ```clojure
-{org.clojars.lispyclouds/navi {:mvn/version "0.1.1"}}
+{org.clojars.lispyclouds/navi {:mvn/version "0.1.2"}}
 ```
 
 Gradle
 ```groovy
-compile 'org.clojars.lispyclouds:navi:0.1.1'
+compile 'org.clojars.lispyclouds:navi:0.1.2'
 ```
 
 Maven
@@ -44,7 +44,7 @@ Maven
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
   <artifactId>navi</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
 </dependency>
 ```
 
@@ -56,7 +56,7 @@ openapi: "3.0.0"
 
 info:
   title: My calculator
-  version: "0.1.1"
+  version: "1.0"
   description: My awesome calc!
 
 paths:
