@@ -64,18 +64,36 @@
          (map p/transform)
          (into [compose-as]))))
 
-(extend-protocol p/Transformable
-  StringSchema
-  (p/transform [schema]
-    (let [content-fn string?
-          max-length (.getMaxLength schema)
-          min-length (.getMinLength schema)
-          properties (cond-> nil
-                       max-length (assoc :max max-length)
-                       min-length (assoc :min min-length))
-          pattern (some-> schema .getPattern re-pattern)
-          enums (into [:enum] (.getEnum schema))]
-      (cond
+(defn format->malli-predicate
+  "Given an OpenAPI string format, return a suitable Malli predicate for basic validation."
+  [fmt]
+  (case fmt
+    "uuid"      uuid?
+    "binary"    string?
+    "byte"      string?
+    "date"      string?
+    "date-time" string?
+    "password"  string?
+    "email"     string?
+    "uri"       string?
+    "hostname"  string?
+    "ipv4"      string?
+    "ipv6"      string?
+    string?))
+
+(defn transform-string
+  "Given a StringSchema or a JsonSchema that we know is string-typed,
+   return a Malli schema that respects format, length constraints, pattern, and enum."
+  [^Schema schema]
+  (let [content-fn (format->malli-predicate (.getFormat schema))
+        max-length (.getMaxLength schema)
+        min-length (.getMinLength schema)
+        properties (cond-> nil
+                     max-length (assoc :max max-length)
+                     min-length (assoc :min min-length))
+        pattern (some-> schema .getPattern re-pattern)
+        enums (into [:enum] (.getEnum schema))]
+      (rcond
         (and properties pattern)
         [:and content-fn [:string properties] pattern]
 
@@ -90,6 +108,11 @@
 
         :else
         content-fn)))
+
+(extend-protocol p/Transformable
+  StringSchema
+   (p/transform [schema]
+    (transform-string schema))
 
   UUIDSchema
   (p/transform [_] uuid?)
@@ -125,7 +148,7 @@
                    "null" nil?
                    "number" number?
                    "object" (transform-object schema)
-                   "string" string?
+                   "string" (transform-string schema)
                    (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
           types (.getTypes schema)]
       (case (count types)
