@@ -93,7 +93,7 @@
                      min-length (assoc :min min-length))
         pattern (some-> schema .getPattern re-pattern)
         enums (into [:enum] (.getEnum schema))]
-      (rcond
+      (cond
         (and properties pattern)
         [:and content-fn [:string properties] pattern]
 
