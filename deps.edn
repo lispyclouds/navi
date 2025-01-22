@@ -6,8 +6,10 @@
 
 {:deps {io.swagger.parser.v3/swagger-parser {:mvn/version "2.1.25"}}
  :aliases {:test {:extra-paths ["test"]
-                  :extra-deps {io.github.cognitect-labs/test-runner
-                               {:git/tag "v0.5.1" :git/sha "dfb30dd"}
+                  :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                                metosin/malli {:mvn/version "0.17.0"}}
                   :main-opts ["-m" "cognitect.test-runner"]
-                  :exec-fn cognitect.test-runner.api/test}}}
+                  :exec-fn cognitect.test-runner.api/test}
+           :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.6" :git/sha "52cf7d6"}
+                          slipset/deps-deploy {:mvn/version "0.2.2"}}
+                   :ns-default build}}}

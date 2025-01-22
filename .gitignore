@@ -11,3 +11,4 @@ target/
 *.iml
 .cache/
 .clj-kondo/
+*.pom.asc

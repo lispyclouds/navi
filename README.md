@@ -1,4 +1,7 @@
-# navi [![Tests](https://github.com/lispyclouds/navi/actions/workflows/ci.yaml/badge.svg)](https://github.com/lispyclouds/navi/actions/workflows/ci.yaml)
+# navi
+
+[![Tests](https://github.com/lispyclouds/navi/actions/workflows/ci.yaml/badge.svg)](https://github.com/lispyclouds/navi/actions/workflows/ci.yaml)
+[![Clojars Project](https://img.shields.io/clojars/v/org.clojars.lispyclouds/navi.svg)](https://clojars.org/org.clojars.lispyclouds/navi)
 
 A tiny library converting [OpenAPI](https://www.openapis.org/) route definitions to [Reitit](https://cljdoc.org/jump/release/metosin/reitit) routes.
 
