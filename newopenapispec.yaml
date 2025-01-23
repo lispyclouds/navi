@@ -1,0 +1,420 @@
+openapi: "3.0.0"
+
+info:
+  title: My calculator
+  version: "0.1.0"
+  description: My awesome calc!
+
+paths:
+  /v1/taxonomy/graphql:
+    get:
+      operationId: getGraphQL
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+            description: query string
+        - in: query
+          name: variables
+          required: false
+          schema:
+            type: string
+            description: json string with query variables
+        - in: query
+          name: operationName
+          required: false
+          schema:
+            type: string
+            description: optional query name that is used when there are multiple query definitions in a single query string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/transit+msgpack:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/transit+json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/edn:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - GraphQL
+      summary: GraphQL endpoint for powerful graph queries
+      description: You should explore this API in [this GraphQL-specific explorer](/v1/taxonomy/graphiql)
+    
+    post:
+      operationId: postGraphQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphQLInput'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/transit+msgpack:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/transit+json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+            application/edn:
+              schema:
+                $ref: '#/components/schemas/GraphQLResult'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - GraphQL
+      summary: GraphQL endpoint for powerful graph queries
+      description: You should explore this API in [this GraphQL-specific explorer](/v1/taxonomy/graphiql)
+
+  /v1/taxonomy/main/versions:
+    get:
+      operationId: getVersions
+      tags:
+        - Main
+      summary: Show the available versions.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionsList'
+            application/transit+msgpack:
+              schema:
+                $ref: '#/components/schemas/VersionsList'
+            application/transit+json:
+              schema:
+                $ref: '#/components/schemas/VersionsList'
+            application/edn:
+              schema:
+                $ref: '#/components/schemas/VersionsList'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  /v1/taxonomy/main/concepts:
+    get:
+      operationId: getConcepts
+      tags:
+        - Main
+      summary: Get concepts. Supply at least one search parameter.
+      parameters:
+        - in: query
+          name: offset
+          description: Return list offset (from 0)
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - in: query
+          name: preferred-label
+          description: Textual name of concept
+          schema:
+            type: string
+        - in: query
+          name: id
+          description: ID of concept
+          schema:
+            type: string
+        - in: query
+          name: limit
+          description: Return list limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - in: query
+          name: include-legacy-information
+          description: This parameter will be removed. Include information related to Arbetsförmedlingen's old internal taxonomy
+          schema:
+            type: boolean
+          deprecated: true
+        - in: query
+          name: related-ids
+          description: OR-restrict to these relation IDs (white space separated list). If specified, relation is required
+          schema:
+            type: string
+        - in: query
+          name: include-deprecated
+          description: Include deprecated values
+          schema:
+            type: boolean
+        - in: query
+          name: deprecated
+          description: Restrict to deprecation state
+          schema:
+            type: boolean
+          deprecated: true
+        - in: query
+          name: type
+          description: Restrict to concept type
+          schema:
+            type: string
+        - in: query
+          name: version
+          description: Taxonomy version, either number that indicates the version, "latest" for latest release, or "next" for unpublished changes (requires admin rights)
+          schema:
+            anyOf:
+              - type: integer
+                format: int64
+              - type: string
+                enum:
+                  - latest
+                  - next
+        - in: query
+          name: relation
+          description: Relation type. If specified, related-ids is required. "substitutability-to" and "substitutability-from" are deprecated, please use "substitutability" and "substituted-by" respectively
+          schema:
+            type: string
+            enum:
+              - close-match
+              - substitutability-from
+              - exact-match
+              - narrower
+              - broad-match
+              - related
+              - possible-combination
+              - narrow-match
+              - substitutability-to
+              - substitutability
+              - broader
+              - unlikely-combination
+              - substituted-by
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/concepts'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  responses:
+    Unauthorized:
+      description: Unauthorized - API key is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              taxonomy/error:
+                type: string
+            required:
+              - taxonomy/error
+            title: taxonomy/unauthorized
+        application/transit+msgpack:
+          schema:
+            type: object
+            properties:
+              taxonomy/error:
+                type: string
+            required:
+              - taxonomy/error
+            title: taxonomy/unauthorized
+        application/transit+json:
+          schema:
+            type: object
+            properties:
+              taxonomy/error:
+                type: string
+            required:
+              - taxonomy/error
+            title: taxonomy/unauthorized
+        application/edn:
+          schema:
+            type: object
+            properties:
+              taxonomy/error:
+                type: string
+            required:
+              - taxonomy/error
+            title: taxonomy/unauthorized
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+        application/transit+msgpack:
+          schema:
+            $ref: '#/components/schemas/Error'
+        application/transit+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+        application/edn:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorWithInfo'
+        application/transit+msgpack:
+          schema:
+            $ref: '#/components/schemas/ErrorWithInfo'
+        application/transit+json:
+          schema:
+            $ref: '#/components/schemas/ErrorWithInfo'
+        application/edn:
+          schema:
+            $ref: '#/components/schemas/ErrorWithInfo'
+  schemas:
+    VersionInfo:
+      type: object
+      oneOf:
+        - required:
+            - taxonomy/version
+        - required:
+            - taxonomy/timestamp
+      properties:
+        taxonomy/version:
+          type: integer
+          format: int64
+        taxonomy/timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 formatted timestamp with timezone (YYYY-MM-DDThh:mm:ss(Z|±hh:mm))
+          # pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$'
+          examples:
+            - "2024-01-17T15:30:00Z"
+            - "2024-01-17T15:30:00+01:00"
+            - "2024-01-17T15:30:00-05:00"
+          externalDocs:
+            description: "ISO 8601 date validation regex explanation"
+            url: "https://stackoverflow.com/a/28022901"
+      title: taxonomy/version-object
+
+    VersionInfo0:
+      type: object
+      properties:
+        taxonomy/version:
+          type: integer
+          format: int64
+        taxonomy/timestamp:
+          type: string
+          format: date-time
+      required:
+        - taxonomy/version
+        - taxonomy/timestamp
+      title: taxonomy/version-object
+    
+    VersionsList:
+      type: array
+      items:
+        $ref: '#/components/schemas/VersionInfo'
+      title: taxonomy/versions
+
+    Error:
+      type: object
+      properties:
+        taxonomy/error:
+          type: string
+          description: Error message
+      required:
+        - taxonomy/error
+      title: taxonomy/err
+    ErrorWithInfo:
+      type: object
+      properties:
+        taxonomy/error:
+          type: string
+          description: Error message describing what went wrong
+        taxonomy/info:
+          type: object
+          description: Additional error context information
+      required:
+        - taxonomy/error
+      title: taxonomy/err
+    NumbersMap:
+      type: object
+      required:
+        - n1
+        - n2
+      properties:
+        n1:
+          type: integer
+          description: The first number
+        n2:
+          type: integer
+          description: The second number
+    concept:
+      type: object
+      properties:
+        taxonomy/id:
+          type: string
+        taxonomy/type:
+          type: string
+        taxonomy/preferred-label:
+          type: string
+      required:
+        - taxonomy/id
+        - taxonomy/type
+        - taxonomy/preferred-label
+    concepts:
+      type: array
+      items:
+        $ref: '#/components/schemas/concept'
+
+    GraphQLResult:
+      type: object
+      properties:
+        data:
+          type: object
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+    GraphQLInput:
+      type: object
+      properties:
+        query:
+          type: string
+          description: query string
+        variables:
+          type: string
+          description: json string with query variables
+        operationName:
+          type: string
+          description: optional query name that is used when there are multiple query definitions in a single query string
+      required:
+        - query    
+  

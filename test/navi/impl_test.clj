@@ -29,8 +29,6 @@
     (is (= {:query [:map [:x string?]]}
            (i/wrap-map :path {:query [:map [:x string?]]})))))
 
-
-
 (deftest openapi-properties-to-malli-spec
   (testing "convert a required OpenAPI Map entry"
     (let [property (Map/entry "id" (StringSchema.))]
@@ -59,8 +57,6 @@
                   (.setSchema (StringSchema.)))]
       (is (= [:x {:optional true} string?]
              (i/->param-schema param))))))
-
-
 
 (deftest responses-to-malli-spec
   (testing "empty response"
