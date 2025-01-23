@@ -111,7 +111,7 @@
   [^java.util.List security-reqs]
   (->> security-reqs
        (mapcat seq)
-       (mapcat (juxt key val))
+       (map (juxt key val))
        (into [])))
 
 (defn operation->data
