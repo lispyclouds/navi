@@ -13,6 +13,7 @@
    [io.swagger.v3.oas.models Operation PathItem]
    [io.swagger.v3.oas.models.media
     Content
+    DateSchema
     IntegerSchema
     MediaType
     ObjectSchema
@@ -38,6 +39,11 @@
     (let [property (Map/entry "id" (StringSchema.))]
       (is (= [:id {:optional true} string?]
              (i/->prop-schema #{"x"} property)))))
+  (testing "convert a Date OpenAPI Map entry"
+    (let [property (Map/entry "date" (DateSchema.))]
+      (is (= [:date inst?]
+             (i/->prop-schema #{"date"} property)))))
+  (testing "convert a DateTime OpenAPI Map entry"
   (testing "convert a DateTime OpenAPI Map entry"
     (let [property (Map/entry "timestamp" (.DateTimeSchema.))]
       (is (= [:timestamp inst?]
