@@ -103,6 +103,17 @@
     (cond-> {:content content}
       description (assoc :description description))))
 
+(defn security->vec-of-vecs
+  "Takes a list of SecurityRequirement objects and returns
+   a vector of [scheme scope-vector] pairs.
+   e.g. [[\"sessionCookieAuth\" [\"read:user\"]]
+         [\"test\" [\"one:two\"]]]"
+  [^java.util.List security-reqs]
+  (->> security-reqs
+       (mapcat seq)
+       (mapcat (juxt key val))
+       (into [])))
+
 (defn operation->data
   "Converts a Java Operation to a map of parameters, responses, schemas and handler
   that conforms to reitit."
@@ -121,10 +132,12 @@
                        (wrap-map :header)
                        (wrap-map :cookie))
           responses (-> (.getResponses op)
-                        (update-kvs handle-response-key response->data))]
+                        (update-kvs handle-response-key response->data))
+          security (security->vec-of-vecs (.getSecurity op))]
       (cond-> {:handler (get handlers (.getOperationId op))}
         (seq schemas) (assoc :parameters schemas)
-        (seq responses) (assoc :responses responses)))
+        (seq responses) (assoc :responses responses)
+        (seq security) (assoc :security security)))
     (catch Exception e
       (throw (ex-info (str "Exception processing operation "
                            (pr-str (.getOperationId op))
