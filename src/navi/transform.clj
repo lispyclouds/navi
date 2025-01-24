@@ -92,7 +92,7 @@
 
         :else
         content-fn)))
-  
+
   DateSchema
   (p/transform [_] inst?)
 

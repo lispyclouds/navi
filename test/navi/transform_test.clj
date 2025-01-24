@@ -39,7 +39,7 @@
   (testing "datetime"
     (is (= inst? (p/transform (DateTimeSchema.)))))
   (testing "date"
-    (is (= inst? (p/transform (DateSchema.))))) 
+    (is (= inst? (p/transform (DateSchema.)))))
   (testing "string"
     (is (= string? (p/transform (StringSchema.)))))
   (testing "integer"

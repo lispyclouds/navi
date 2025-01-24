@@ -40,16 +40,16 @@
     (let [property (Map/entry "id" (StringSchema.))]
       (is (= [:id {:optional true} string?]
              (i/->prop-schema #{"x"} property)))))
-  
+
   (testing "convert a DateTime OpenAPI Map entry"
     (let [property (Map/entry "timestamp" (DateTimeSchema.))]
       (is (= [:timestamp inst?]
-                       (i/->prop-schema #{"timestamp"} property)))))
-  
+             (i/->prop-schema #{"timestamp"} property)))))
+
   (testing "convert a Date OpenAPI Map entry"
-              (let [property (Map/entry "date" (DateSchema.))]
-                (is (= [:date inst?]
-                       (i/->prop-schema #{"date"} property))))))
+    (let [property (Map/entry "date" (DateSchema.))]
+      (is (= [:date inst?]
+             (i/->prop-schema #{"date"} property))))))
 
 (deftest openapi-parameters-to-malli-spec
   (testing "convert a required OpenAPI Parameter"
