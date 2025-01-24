@@ -109,6 +109,9 @@
                       .toInstant))))
       (testing "java.time.ZonedDateTime converted to Instant"
         (is (pred (-> (java.time.ZonedDateTime/now)
+                      .toInstant))))
+      (testing "java.time.OffsetDateTime converted to Instant"
+        (is (pred (-> (java.time.OffsetDateTime/now)
                       .toInstant))))))
 
   (testing "inst? rejects invalid inputs"
