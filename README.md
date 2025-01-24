@@ -20,7 +20,6 @@ Currently unsupported (raise an issue if needed!):
 - Other coercion libs
 - `oneOf` composed schema (mostly can be handled by `anyOf`)
 - Some string formats:
-  - DateTime
   - Email
   - File
 
