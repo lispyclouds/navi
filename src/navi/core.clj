@@ -39,43 +39,7 @@
      "HealthCheck" (fn [_]
                      {:status 200
                       :body "Ok"})})
-  (def routes (-> "newopenapispec.yaml"
-                  slurp
-                  (routes-from handlers)
-                  )))
-
-   
-
-(defn function->symbol [x]
-  (if (fn? x)
-    (case x
-      clojure.core/string? 'string?
-      clojure.core/int? 'int?
-      clojure.core/boolean? 'boolean?
-      clojure.core/inst? 'inst?
-      (-> x
-          .getClass
-          .getName
-          clojure.lang.Compiler/demunge
-          symbol))
-    x))
-
-(defn routes->serializable 
-  "Convert routes data structure to serializable form"
-  [routes]
-  (clojure.walk/postwalk function->symbol routes))
-
-(defn save-routes! [routes filename]
-  (spit filename 
-        (with-out-str 
-          (clojure.pprint/pprint 
-            (routes->serializable routes)))))
-
-;; Usage in REPL:
-(save-routes! routes "routes2.edn")
-
-(defn read-routes [filename]
-  (clojure.edn/read-string 
-    (slurp filename)))
-
-(def ole (read-routes "routes.edn"))
+  (-> "api.yaml"
+      slurp
+      (routes-from handlers)
+      pp/pprint))
