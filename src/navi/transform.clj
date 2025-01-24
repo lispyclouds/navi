@@ -22,6 +22,8 @@
     ObjectSchema
     Schema
     StringSchema
+    DateTimeSchema
+    DateSchema
     UUIDSchema]
    [io.swagger.v3.oas.models.parameters
     CookieParameter
@@ -90,6 +92,12 @@
 
         :else
         content-fn)))
+  
+  DateSchema
+  (p/transform [_] inst?)
+
+  DateTimeSchema
+  (p/transform [_] inst?)
 
   UUIDSchema
   (p/transform [_] uuid?)

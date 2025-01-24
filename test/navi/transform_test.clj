@@ -17,6 +17,8 @@
     ByteArraySchema
     ComposedSchema
     Content
+    DateSchema
+    DateTimeSchema
     IntegerSchema
     JsonSchema
     MediaType
@@ -34,6 +36,10 @@
    [java.util LinkedHashMap]))
 
 (deftest primitives
+  (testing "datetime"
+    (is (= inst? (p/transform (DateTimeSchema.)))))
+  (testing "date"
+    (is (= inst? (p/transform (DateSchema.))))) 
   (testing "string"
     (is (= string? (p/transform (StringSchema.)))))
   (testing "integer"
@@ -83,6 +89,40 @@
     (is (= any? (p/transform (BinarySchema.)))))
   (testing "nil"
     (is (= any? (p/transform nil)))))
+
+(deftest date-schema-transformations
+  (testing "DateSchema transforms to inst? predicate"
+    (let [schema (DateSchema.)]
+      (is (= inst? (p/transform schema)))))
+
+  (testing "DateTimeSchema transforms to inst? predicate"
+    (let [schema (DateTimeSchema.)]
+      (is (= inst? (p/transform schema)))))
+
+  (testing "inst? validates different date types"
+    (let [schema (DateTimeSchema.)
+          pred (p/transform schema)]
+      (testing "java.util.Date"
+        (is (pred (java.util.Date.))))
+      (testing "java.time.Instant"
+        (is (pred (java.time.Instant/now))))
+      (testing "java.time.LocalDateTime converted to Instant"
+        (is (pred (-> (java.time.LocalDateTime/now)
+                      (.atZone (java.time.ZoneId/systemDefault))
+                      .toInstant))))
+      (testing "java.time.ZonedDateTime converted to Instant"
+        (is (pred (-> (java.time.ZonedDateTime/now)
+                      .toInstant))))
+      (testing "java.time.OffsetDateTime converted to Instant"
+        (is (pred (-> (java.time.OffsetDateTime/now)
+                      .toInstant))))))
+
+  (testing "inst? rejects invalid inputs"
+    (let [schema (DateTimeSchema.)
+          pred (p/transform schema)]
+      (is (not (pred "2024-01-01")))
+      (is (not (pred nil)))
+      (is (not (pred 123))))))
 
 (deftest string-formats
   (testing "uuid"
