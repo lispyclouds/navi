@@ -154,6 +154,7 @@
                    (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
           types (.getTypes schema)]
       (case (count types)
+        nil (throw (IllegalArgumentException. (str "Invalid schema: " schema)))
         0 (transform-composed schema)
         1 (-> types first pred)
         (into [:or] (map pred types)))))

@@ -1,0 +1,103 @@
+openapi: "3.1.1"
+
+info:
+  title: My API
+  version: "1.0"
+  description: My awesome API
+
+paths:
+  "/get/{id}/and/{version}":
+    get:
+      operationId: GetIdAndVersion
+      summary: Gets Id and Version as Path params
+
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: The id
+          schema:
+            type: string
+        - name: version
+          required: true
+          in: path
+          description: The version
+          schema:
+            type: integer
+
+    delete:
+      operationId: DeleteIdAndVersion
+      summary: Deletes Id and Version as Path params
+
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: version
+          required: true
+          in: path
+          schema:
+            type: integer
+
+  "/post/{id}":
+    post:
+      operationId: PostId
+      summary: Post Id and Payload
+
+      requestBody:
+        description: The payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Payload"
+
+  "/health":
+    get:
+      operationId: HealthCheck
+      summary: Returns Ok if all is well
+
+      parameters:
+        - name: last-state
+          in: cookie
+          schema:
+            type: string
+
+  "/info/at/{time}":
+    get:
+      operationId: GetInfoAtTime
+      summary: Gets Info at time
+
+      parameters:
+        - name: time
+          required: true
+          in: path
+          schema:
+            type: string
+            format: date
+        - name: verbose
+          in: query
+          schema:
+            type: boolean
+
+components:
+  schemas:
+    Payload:
+      type: object
+      required:
+        - foo
+        - bar
+        - baz
+      properties:
+        foo:
+          type: string
+          format: uuid
+        bar:
+          type: string
+          format: date-time
+        baz:
+          type: array
+          items:
+            type: number
