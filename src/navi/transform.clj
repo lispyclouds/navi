@@ -66,28 +66,22 @@
          (map p/transform)
          (into [compose-as]))))
 
-(defn format->malli-predicate
-  "Given an OpenAPI string format, return a suitable Malli predicate for basic validation."
-  [fmt]
-  (case fmt
-    "uuid"      uuid?
-    "binary"    string?
-    "byte"      string?
-    "date"      string?
-    "date-time" string?
-    "password"  string?
-    "email"     string?
-    "uri"       string?
-    "hostname"  string?
-    "ipv4"      string?
-    "ipv6"      string?
-    string?))
-
-(defn transform-string
+(defn- transform-string
   "Given a StringSchema or a JsonSchema that we know is string-typed,
    return a Malli schema that respects format, length constraints, pattern, and enum."
   [^Schema schema]
-  (let [content-fn (format->malli-predicate (.getFormat schema))
+  (let [preds {"uuid" uuid?
+               "binary" string?
+               "byte" string?
+               "date" inst?
+               "date-time" inst?
+               "password" string?
+               "email" string?
+               "uri" uri?
+               "hostname" string?
+               "ipv4" string?
+               "ipv6" string?}
+        content-fn (get preds (.getFormat schema) string?)
         max-length (.getMaxLength schema)
         min-length (.getMinLength schema)
         properties (cond-> nil
@@ -95,21 +89,21 @@
                      min-length (assoc :min min-length))
         pattern (some-> schema .getPattern re-pattern)
         enums (into [:enum] (.getEnum schema))]
-      (cond
-        (and properties pattern)
-        [:and content-fn [:string properties] pattern]
+    (cond
+      (and properties pattern)
+      [:and content-fn [:string properties] pattern]
 
-        properties
-        [:and content-fn [:string properties]]
+      properties
+      [:and content-fn [:string properties]]
 
-        pattern
-        [:and content-fn pattern]
+      pattern
+      [:and content-fn pattern]
 
-        (< 1 (count enums))
-        enums
+      (< 1 (count enums))
+      enums
 
-        :else
-        content-fn)))
+      :else
+      content-fn)))
 
 (extend-protocol p/Transformable
   StringSchema
