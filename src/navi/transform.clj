@@ -22,6 +22,8 @@
     ObjectSchema
     Schema
     StringSchema
+    DateTimeSchema
+    DateSchema
     UUIDSchema]
    [io.swagger.v3.oas.models.parameters
     CookieParameter
@@ -111,8 +113,14 @@
 
 (extend-protocol p/Transformable
   StringSchema
-   (p/transform [schema]
+  (p/transform [schema]
     (transform-string schema))
+
+  DateSchema
+  (p/transform [_] inst?)
+
+  DateTimeSchema
+  (p/transform [_] inst?)
 
   UUIDSchema
   (p/transform [_] uuid?)
