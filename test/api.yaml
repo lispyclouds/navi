@@ -81,6 +81,19 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: foo
+          in: query
+          schema:
+            anyOf:
+              - type: string
+              - type: integer
+        - name: bar
+          in: query
+          schema:
+            allOf:
+              - type: integer
+              - type: string
+                format: uuid
 
 components:
   schemas:

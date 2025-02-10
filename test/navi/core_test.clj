@@ -10,7 +10,7 @@
    [navi.core :as c]))
 
 (deftest full-test
-  (testing "full route gen"
+  (testing "full route tree"
     (is (= (c/routes-from (slurp "test/api.yaml")
                           {"GetIdAndVersion" identity
                            "DeleteIdAndVersion" identity
@@ -58,4 +58,6 @@
                {:path [:map [:time inst?]]
                 :query
                 [:map
-                 [:verbose {:optional true} boolean?]]}}}]]))))
+                 [:verbose {:optional true} boolean?]
+                 [:foo {:optional true} [:or string? int?]]
+                 [:bar {:optional true} [:and int? uuid?]]]}}}]]))))
