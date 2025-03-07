@@ -10,7 +10,7 @@
 
 (def lib 'org.clojars.lispyclouds/navi)
 
-(def version "0.1.2")
+(def version "0.1.3")
 
 (def class-dir "target/classes")
 
@@ -30,7 +30,12 @@
                 :lib lib
                 :version version
                 :basis basis
-                :src-dirs src-dirs})
+                :src-dirs src-dirs
+                :pom-data [[:licenses
+                            [:license
+                             [:name "MIT"]
+                             [:url "https://opensource.org/license/mit"];]
+                             [:distribution "repo"]]]]})
   (b/copy-dir {:src-dirs src-dirs
                :target-dir class-dir})
   (b/jar {:class-dir class-dir
