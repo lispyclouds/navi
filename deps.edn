@@ -5,6 +5,7 @@
 ; https://opensource.org/licenses/MIT.
 
 {:deps {io.swagger.parser.v3/swagger-parser {:mvn/version "2.1.25"}}
+ :paths ["resources" "src"]
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                                metosin/malli {:mvn/version "0.17.0"}}
