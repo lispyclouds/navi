@@ -31,10 +31,12 @@
                 :version version
                 :basis basis
                 :src-dirs src-dirs
-                :pom-data [[:licenses
+                :pom-data [[:author "Rahul De <rahul080327@gmail.com>"]
+                           [:url "https://github.com/lispyclouds/navi"]
+                           [:licenses
                             [:license
                              [:name "MIT"]
-                             [:url "https://opensource.org/license/mit"];]
+                             [:url "https://opensource.org/license/mit"]
                              [:distribution "repo"]]]]})
   (b/copy-dir {:src-dirs src-dirs
                :target-dir class-dir})
