@@ -1,0 +1,65 @@
+openapi: 3.1.0
+info:
+  title: Simple User Listing API
+  version: "1.0.0"
+
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      security:
+        - sessionCookieAuth: ["read:user"]
+        - test: ["one:two"]
+      responses:
+        '200':
+          description: A list of user objects
+        '401':
+          description: Unauthorized
+  /users-single-scheme:
+    get:
+      operationId: listUsersSingle
+      security:
+        - sessionCookieAuth: ["read:user"]
+      responses:
+        '200':
+          description: OK
+  /users-no-scope:
+    get:
+      operationId: listUsersNoScope
+      security:
+        - sessionCookieAuth: []
+      responses:
+        '200':
+          description: OK
+  /users-no-security:
+    get:
+      operationId: listUsersNoSecurity
+      responses:
+        '200':
+          description: OK
+
+components:
+  securitySchemes:
+    sessionCookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: >
+        A session-based authentication scheme. The cookie must contain
+        a valid session ID that identifies the user.
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier for a user
+        email:
+          type: string
+          description: Optional email address of the user
+        name:
+          type: string
+          description: Optional name of the user

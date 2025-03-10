@@ -7,7 +7,9 @@
 (ns navi.impl-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [navi.impl :as i])
+   [navi.core :as navi]
+   [navi.impl :as i]
+   [clojure.java.io :as io])
   (:import
    [clojure.lang ExceptionInfo]
    [io.swagger.v3.oas.models Operation PathItem]
@@ -154,3 +156,45 @@
       (is (= {:get {:handler "a handler"
                     :parameters {:path [:map [:x int?]]}}}
              (i/path-item->data path-item handlers))))))
+
+(defn find-route [rts path method]
+        (some (fn [[p r]]
+                (when (= p path)
+                  (get r method)))
+              rts))
+
+(deftest security-requirements-test
+  (testing "Verifying security requirements from security-users.yml"
+    ;; A dummy map of operationId to handler (the actual function doesn't matter for this test).
+    (let [handlers {"listUsers"          (constantly :ok)
+                    "listUsersSingle"    (constantly :ok)
+                    "listUsersNoScope"   (constantly :ok)
+                    "listUsersNoSecurity" (constantly :ok)}
+          api-spec (slurp (io/resource "security-users.yml"))
+          routes   (navi/routes-from api-spec handlers)]
+      
+      (testing "multiple security schemes"
+        (let [route (find-route routes "/users" :get)]
+          (is (some? route) "Should have found /users GET route")
+          (is (= [["sessionCookieAuth" ["read:user"]]
+                  ["test" ["one:two"]]]
+                 (:security route)))))
+
+      (testing "single security scheme with scopes"
+        (let [route (find-route routes "/users-single-scheme" :get)]
+          (is (some? route) "Should have found /users-single-scheme GET route")
+          (is (= [["sessionCookieAuth" ["read:user"]]]
+                 (:security route)))))
+
+      (testing "single security scheme without scopes"
+        (let [route (find-route routes "/users-no-scope" :get)]
+          (is (some? route) "Should have found /users-no-scope GET route")
+          (is (= [["sessionCookieAuth" []]]
+                 (:security route))
+              "No scopes should yield an empty vector for that scheme")))
+
+      (testing "no security block"
+        (let [route (find-route routes "/users-no-security" :get)]
+          (is (some? route) "Should have found /users-no-security GET route")
+          (is (nil? (:security route))
+              "Route with no security block should not have :security key"))))))
