@@ -94,7 +94,44 @@ paths:
               - type: integer
               - type: string
                 format: uuid
-
+  "/v1/inclusive-interval-integer":
+    get:
+      operationId: GetInclusiveIntervalInteger
+      summary: Get interval data given lower and upper bounds
+      parameters:
+        - name: lower
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: upper
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            maximum: 119
+  "/v1/inclusive-interval-number":
+    get:
+      operationId: GetInclusiveIntervalNumber
+      summary: Get interval data given lower and upper bounds
+      parameters:
+        - name: lower
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+        - name: upper
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            maximum: 119
 components:
   schemas:
     Payload:

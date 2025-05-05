@@ -32,6 +32,21 @@
     QueryParameter
     RequestBody]))
 
+(defn wrap-and [conditions]
+  (if (= 1 (count conditions))
+    (first conditions)
+    (into [:and] conditions)))
+
+(defn transform-numeric [main-pred schema]
+  ;; The swagger-parser library does not
+  ;; seem to recognize `exclusiveMinimum: true` and
+  ;; `exclusiveMaximum: true`.
+  (wrap-and
+   (into [main-pred]
+         (remove #(nil? (second %)))
+         [[:>= (.getMinimum schema)]
+          [:<= (.getMaximum schema)]])))
+
 (defn- transform-object
   [^ObjectSchema schema]
   (let [required (->> schema
@@ -120,10 +135,10 @@
   (p/transform [_] uuid?)
 
   IntegerSchema
-  (p/transform [_] int?)
+  (p/transform [schema] (transform-numeric int? schema))
 
   NumberSchema
-  (p/transform [_] number?)
+  (p/transform [schema] (transform-numeric number? schema))
 
   BooleanSchema
   (p/transform [_] boolean?)
@@ -146,9 +161,9 @@
                  (case typ
                    "array" (transform-array schema)
                    "boolean" boolean?
-                   "integer" int?
+                   "integer" (transform-numeric int? schema)
                    "null" nil?
-                   "number" number?
+                   "number" (transform-numeric number? schema)
                    "object" (transform-object schema)
                    "string" (transform-string schema)
                    (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
