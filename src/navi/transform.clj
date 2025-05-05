@@ -32,12 +32,14 @@
     QueryParameter
     RequestBody]))
 
-(defn wrap-and [conditions]
+(defn- wrap-and
+  [conditions]
   (if (= 1 (count conditions))
     (first conditions)
     (into [:and] conditions)))
 
-(defn transform-numeric [main-pred schema]
+(defn- transform-numeric
+  [main-pred schema]
   ;; The swagger-parser library does not
   ;; seem to recognize `exclusiveMinimum: true` and
   ;; `exclusiveMaximum: true`.

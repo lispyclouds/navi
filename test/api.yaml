@@ -132,6 +132,19 @@ paths:
             type: number
             format: double
             maximum: 119
+  "/v1/min-max":
+    get:
+      operationId: GetMinMaxNumber
+      summary: Get a min max number
+      parameters:
+        - name: num
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 100
 components:
   schemas:
     Payload:

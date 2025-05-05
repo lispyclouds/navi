@@ -18,7 +18,8 @@
                            "HealthCheck" identity
                            "GetInfoAtTime" identity
                            "GetInclusiveIntervalInteger" identity
-                           "GetInclusiveIntervalNumber" identity})
+                           "GetInclusiveIntervalNumber" identity
+                           "GetMinMaxNumber" identity})
            [["/get/{id}/and/{version}"
              {:get
               {:handler identity
@@ -86,4 +87,13 @@
                   [:and number? [:>= 0M]]]
                  [:upper
                   {:optional true}
-                  [:and number? [:<= 119M]]]]}}}]]))))
+                  [:and number? [:<= 119M]]]]}}}]
+            ["/v1/min-max"
+             {:get
+              {:handler identity
+               :parameters
+               {:query
+                [:map
+                 [:num
+                  {:optional true}
+                  [:and number? [:>= 0M] [:<= 100M]]]]}}}]]))))
