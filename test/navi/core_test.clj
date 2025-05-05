@@ -19,7 +19,8 @@
                            "GetInfoAtTime" identity
                            "GetInclusiveIntervalInteger" identity
                            "GetInclusiveIntervalNumber" identity
-                           "GetMinMaxNumber" identity})
+                           "GetMinMaxNumber" identity
+                           "RunV2GraphQLQuery" identity})
            [["/get/{id}/and/{version}"
              {:get
               {:handler identity
@@ -96,4 +97,18 @@
                 [:map
                  [:num
                   {:optional true}
-                  [:and number? [:>= 0M] [:<= 100M]]]]}}}]]))))
+                  [:and number? [:>= 0M] [:<= 100M]]]]}}}]
+            ["/v2/graphql"
+             {:post
+              {:handler identity
+               :parameters
+               {:form
+                [:map
+                 {:closed false}
+                 [:query string?]
+                 [:variables
+                  {:optional true}
+                  string?]
+                 [:operationName
+                  {:optional true}
+                  string?]]}}}]]))))
