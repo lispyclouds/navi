@@ -214,17 +214,16 @@
   RequestBody
   (p/transform [param]
     (if-let [content (.getContent param)]
-      (let [^MediaType content (-> content
-                                   .values
-                                   .stream
-                                   .findFirst
-                                   .get)
+      (let [[media-type ^MediaType content] (first content)
             body-spec (-> content
                           .getSchema
-                          p/transform)]
-        {:body (if (.getRequired param)
-                 body-spec
-                 [:or nil? body-spec])})
+                          p/transform)
+            param-key (case media-type
+                        "application/x-www-form-urlencoded" :form
+                        :body)]
+        {param-key (if (.getRequired param)
+                     body-spec
+                     [:or nil? body-spec])})
       {})))
 
 (comment

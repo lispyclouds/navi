@@ -145,6 +145,30 @@ paths:
             format: double
             minimum: 0
             maximum: 100
+  "/v2/graphql":
+    post:
+      operationId: RunV2GraphQLQuery
+      summary: Run a GraphQL query using POST.
+      requestBody:
+        description: "The query data"
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: "query string"
+                variables:
+                  type: string
+                  description: "json string with query variables"
+                operationName:
+                  type: string
+                  description: "optional query name"
+              required:
+                - query
+
 components:
   schemas:
     Payload:
