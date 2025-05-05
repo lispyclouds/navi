@@ -16,7 +16,9 @@
                            "DeleteIdAndVersion" identity
                            "PostId" identity
                            "HealthCheck" identity
-                           "GetInfoAtTime" identity})
+                           "GetInfoAtTime" identity
+                           "GetInclusiveIntervalInteger" identity
+                           "GetInclusiveIntervalNumber" identity})
            [["/get/{id}/and/{version}"
              {:get
               {:handler identity
@@ -60,4 +62,28 @@
                 [:map
                  [:verbose {:optional true} boolean?]
                  [:foo {:optional true} [:or string? int?]]
-                 [:bar {:optional true} [:and int? uuid?]]]}}}]]))))
+                 [:bar {:optional true} [:and int? uuid?]]]}}}]
+            ["/v1/inclusive-interval-integer"
+             {:get
+              {:handler identity
+               :parameters
+               {:query
+                [:map
+                 [:lower
+                  {:optional true}
+                  [:and int? [:>= 0M]]]
+                 [:upper
+                  {:optional true}
+                  [:and int? [:<= 119M]]]]}}}]
+            ["/v1/inclusive-interval-number"
+             {:get
+              {:handler identity
+               :parameters
+               {:query
+                [:map
+                 [:lower
+                  {:optional true}
+                  [:and number? [:>= 0M]]]
+                 [:upper
+                  {:optional true}
+                  [:and number? [:<= 119M]]]]}}}]]))))
