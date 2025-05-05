@@ -16,7 +16,8 @@
                            "DeleteIdAndVersion" identity
                            "PostId" identity
                            "HealthCheck" identity
-                           "GetInfoAtTime" identity})
+                           "GetInfoAtTime" identity
+                           "RunV1GraphQLQuery" identity})
            [["/get/{id}/and/{version}"
              {:get
               {:handler identity
@@ -60,4 +61,13 @@
                 [:map
                  [:verbose {:optional true} boolean?]
                  [:foo {:optional true} [:or string? int?]]
-                 [:bar {:optional true} [:and int? uuid?]]]}}}]]))))
+                 [:bar {:optional true} [:and int? uuid?]]]}}}]
+            ["/v1/graphql"
+             {:get
+              {:handler identity
+               :parameters
+               {:query [:map [:query string?]]},
+               :responses
+               {200
+                {:content {"application/json" {:schema :any}},
+                 :description "OK"}}}}]]))))

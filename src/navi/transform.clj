@@ -51,20 +51,24 @@
        any?
        (p/transform items))]))
 
+(defn- composed-schema-data-from [type-key items]
+  (when (seq items)
+    [type-key items]))
+
+(defn- composed-schema-data [^ComposedSchema schema]
+  (or (composed-schema-data-from :any-of (.getAnyOf schema))
+      (composed-schema-data-from :all-of (.getAllOf schema))
+      (composed-schema-data-from :one-of (.getOneOf schema))))
+
 (defn- transform-composed
   [^ComposedSchema schema]
-  (let [[schemas compose-as] (cond
-                               (< 0 (count (.getAnyOf schema)))
-                               [(.getAnyOf schema) :or]
-
-                               (< 0 (count (.getAllOf schema)))
-                               [(.getAllOf schema) :and]
-
-                               :else ;; TODO: Implement oneOf
-                               (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf")))]
+  (if-let [[schema-type schemas] (composed-schema-data schema)]
     (->> schemas
          (map p/transform)
-         (into [compose-as]))))
+         (into [(case schema-type
+                  :any-of :or
+                  :all-of :and)]))
+    (throw (IllegalArgumentException. "Unsupported composite schema. Use either anyOf, allOf"))))
 
 (defn- transform-string
   "Given a StringSchema or a JsonSchema that we know is string-typed,
@@ -155,7 +159,9 @@
           types (.getTypes schema)]
       (case (count types)
         nil (throw (IllegalArgumentException. (str "Invalid schema: " schema)))
-        0 (transform-composed schema)
+        0 (if (composed-schema-data schema)
+            (transform-composed schema)
+            :any)
         1 (-> types first pred)
         (into [:or] (map pred types)))))
 

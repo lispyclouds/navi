@@ -94,7 +94,24 @@ paths:
               - type: integer
               - type: string
                 format: uuid
-
+  "/v1/graphql":
+    get:
+      operationId: RunV1GraphQLQuery
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            description: "Query string"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                anyValue: { }
+                nullable: true
 components:
   schemas:
     Payload:
