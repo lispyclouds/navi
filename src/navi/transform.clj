@@ -39,7 +39,7 @@
     (into [:and] conditions)))
 
 (defn- transform-numeric
-  [main-pred schema]
+  [main-pred ^Schema schema]
   ;; The swagger-parser library does not
   ;; seem to recognize `exclusiveMinimum: true` and
   ;; `exclusiveMaximum: true`.
@@ -137,10 +137,12 @@
   (p/transform [_] uuid?)
 
   IntegerSchema
-  (p/transform [schema] (transform-numeric int? schema))
+  (p/transform [schema]
+    (transform-numeric int? schema))
 
   NumberSchema
-  (p/transform [schema] (transform-numeric number? schema))
+  (p/transform [schema]
+    (transform-numeric number? schema))
 
   BooleanSchema
   (p/transform [_] boolean?)
@@ -171,7 +173,6 @@
                    (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
           types (.getTypes schema)]
       (case (count types)
-        nil (throw (IllegalArgumentException. (str "Invalid schema: " schema)))
         0 (transform-composed schema)
         1 (-> types first pred)
         (into [:or] (map pred types)))))
