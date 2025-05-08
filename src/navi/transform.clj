@@ -83,12 +83,17 @@
          (map p/transform)
          (into [compose-as]))))
 
+(def byte-array-class (class (byte-array 0)))
+
+(defn binary-data? [x]
+  (instance? byte-array-class x))
+
 (defn- transform-string
   "Given a StringSchema or a JsonSchema that we know is string-typed,
    return a Malli schema that respects format, length constraints, pattern, and enum."
   [^Schema schema]
   (let [preds {"uuid" uuid?
-               "binary" string?
+               "binary" [:fn binary-data?]
                "byte" string?
                "date" inst?
                "date-time" inst?
