@@ -18,11 +18,12 @@
   [^String api-spec handlers]
   (let [parse-options (doto (ParseOptions.)
                         (.setResolveFully true))
-        contents (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
-        paths (.getPaths (.getOpenAPI contents))]
-    (->> #(i/path-item->data % handlers)
-         (i/update-kvs paths identity)
-         (mapv identity))))
+        contents (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)]
+    (->> contents
+         .getOpenAPI
+         .getPaths
+         (mapv (fn [[path item]]
+                 [path (i/path-item->data item handlers)])))))
 
 (comment
   (require '[clojure.pprint :as pp])
