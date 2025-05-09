@@ -8,8 +8,7 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [malli.core :as m]
-   [navi.protocols :as p]
-   [navi.transform :refer [binary-data?]])
+   [navi.protocols :as p])
   (:import
    [io.swagger.v3.oas.models.media
     ArraySchema
@@ -225,10 +224,3 @@
            (p/transform (doto (JsonSchema.)
                           (.setAllOf [(.types (JsonSchema.) #{"string"})
                                       (.types (JsonSchema.) #{"integer"})])))))))
-
-(deftest binary-data-test
-  (is (binary-data? (byte-array [1 2 3])))
-  (is (not (binary-data? :a)))
-  (is (not (binary-data? 119)))
-  (is (not (binary-data? [])))
-  (is (not (binary-data? (int-array [1 2 3])))))

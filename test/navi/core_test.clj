@@ -119,6 +119,4 @@
               {:handler identity
                :parameters
                {:body
-                [:or
-                 nil?
-                 [:fn transform/binary-data?]]}}}]]))))
+                [:or nil? bytes?]}}}]]))))
