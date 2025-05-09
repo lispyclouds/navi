@@ -7,8 +7,7 @@
 (ns navi.core-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [navi.core :as c]
-   [navi.transform :as transform]))
+   [navi.core :as c]))
 
 (deftest full-test
   (testing "full route tree"
