@@ -8,7 +8,8 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [malli.core :as m]
-   [navi.protocols :as p])
+   [navi.protocols :as p]
+   [navi.transform])
   (:import
    [io.swagger.v3.oas.models.media
     ArraySchema
