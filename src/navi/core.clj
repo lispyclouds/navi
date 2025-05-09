@@ -17,9 +17,8 @@
    Returns the reitit route map with malli schemas"
   [^String api-spec handlers]
   (let [parse-options (doto (ParseOptions.)
-                        (.setResolveFully true))
-        contents (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)]
-    (->> contents
+                        (.setResolveFully true))]
+    (->> (.readContents (OpenAPIV3Parser.) api-spec nil parse-options)
          .getOpenAPI
          .getPaths
          (mapv (fn [[path item]]
@@ -40,7 +39,7 @@
      "HealthCheck" (fn [_]
                      {:status 200
                       :body "Ok"})})
-  (-> "api.yaml"
+  (-> "test/api.yaml"
       slurp
       (routes-from handlers)
       pp/pprint))
