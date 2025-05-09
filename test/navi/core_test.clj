@@ -20,7 +20,8 @@
                            "GetInclusiveIntervalInteger" identity
                            "GetInclusiveIntervalNumber" identity
                            "GetMinMaxNumber" identity
-                           "RunV2GraphQLQuery" identity})
+                           "RunV2GraphQLQuery" identity
+                           "ProvideRawData" identity})
            [["/get/{id}/and/{version}"
              {:get
               {:handler identity
@@ -111,4 +112,10 @@
                   string?]
                  [:operationName
                   {:optional true}
-                  string?]]}}}]]))))
+                  string?]]}}}]
+            ["/raw"
+             {:post
+              {:handler identity
+               :parameters
+               {:body
+                [:or nil? bytes?]}}}]]))))

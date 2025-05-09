@@ -168,6 +168,15 @@ paths:
                   description: "optional query name"
               required:
                 - query
+  "/raw":
+    post:
+      operationId: ProvideRawData
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
 
 components:
   schemas:

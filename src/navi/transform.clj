@@ -88,7 +88,7 @@
    return a Malli schema that respects format, length constraints, pattern, and enum."
   [^Schema schema]
   (let [preds {"uuid" uuid?
-               "binary" string?
+               "binary" bytes?
                "byte" string?
                "date" inst?
                "date-time" inst?
