@@ -31,8 +31,7 @@
                 :version version
                 :basis basis
                 :src-dirs src-dirs
-                :pom-data [[:author "Rahul De <rahul080327@gmail.com>"]
-                           [:url "https://github.com/lispyclouds/navi"]
+                :pom-data [[:url "https://github.com/lispyclouds/navi"]
                            [:licenses
                             [:license
                              [:name "MIT"]
