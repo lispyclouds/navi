@@ -10,7 +10,7 @@
 
 (def lib 'org.clojars.lispyclouds/navi)
 
-(def version "0.1.3")
+(def version "0.1.4")
 
 (def class-dir "target/classes")
 
