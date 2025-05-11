@@ -32,6 +32,10 @@
                 :basis basis
                 :src-dirs src-dirs
                 :pom-data [[:url "https://github.com/lispyclouds/navi"]
+                           [:developers
+                            [:developer [:name "Rahul De"]]]
+                           [:scm
+                            [:url "https://github.com/lispyclouds/navi"]]
                            [:licenses
                             [:license
                              [:name "MIT"]
