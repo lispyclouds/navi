@@ -17,31 +17,36 @@ Suitable for [spec-first](https://www.atlassian.com/blog/technology/spec-first-a
 - A large subset of OpenAPI types are currently supported, please raise an issue if something is unsupported
 
 Currently unsupported (raise an issue if needed!):
+
 - Other coercion libs
 - `oneOf` composed schema (mostly can be handled by `anyOf`)
-- Some string formats:
-  - Email
-  - File
+- `Any Type` can mostly be worked around by omitting it completely
+- Some extra string formats
 
 Any contributions are much much welcome and appreciated!
 
 ## Installation
+
 Leiningen/Boot
+
 ```clojure
 [org.clojars.lispyclouds/navi "0.1.4"]
 ```
 
 Clojure CLI/deps.edn
+
 ```clojure
 {org.clojars.lispyclouds/navi {:mvn/version "0.1.4"}}
 ```
 
 Gradle
+
 ```groovy
 compile 'org.clojars.lispyclouds:navi:0.1.4'
 ```
 
 Maven
+
 ```xml
 <dependency>
   <groupId>org.clojars.lispyclouds</groupId>
@@ -53,6 +58,7 @@ Maven
 ## Usage
 
 Given a `api.yaml`:
+
 ```yaml
 openapi: "3.0.0"
 
@@ -113,6 +119,7 @@ components:
 ```
 
 A clojure map of OperationId to handler fns:
+
 ```clojure
 (def handlers
   {"AddGet" (fn [{{{:keys [n1 n2]} :path} :parameters}]
@@ -127,6 +134,7 @@ A clojure map of OperationId to handler fns:
 ```
 
 Generate the routes:
+
 ```clojure
 (require '[navi.core :as navi])
 
@@ -152,6 +160,7 @@ Generate the routes:
 ```
 
 Bootstrapping a Jetty server:
+
 ```clojure
 (ns server.main
   (:require
@@ -200,10 +209,12 @@ Bootstrapping a Jetty server:
 ```
 
 ### Build Requirements
+
 - JDK 8+
 - Clojure [tools.deps](https://clojure.org/guides/getting_started)
 
 ### Running tests locally
+
 - `clojure -X:test` to run all tests
 
 ## License
