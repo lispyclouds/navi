@@ -32,6 +32,22 @@
     QueryParameter
     RequestBody]))
 
+(defn- empty-schema? [^Schema s]
+  (or (nil? s)
+      (and (nil? (.getType s))
+           (nil? (.getProperties s))
+           (nil? (.getAllOf s))
+           (nil? (.getOneOf s))
+           (nil? (.getAnyOf s))
+           (nil? (.getNot s))
+           (nil? (.getAdditionalProperties s))
+           (nil? (.getPatternProperties s))
+           (nil? (.getItems s))
+           (nil? (.get$ref s))
+           (let [ext (.getExtensions s)]
+             (or (nil? ext)
+                 (empty? ext))))))
+
 (defn- wrap-and
   [conditions]
   (if (= 1 (count conditions))
@@ -173,7 +189,9 @@
                    (throw (IllegalArgumentException. (format "Unsupported type %s for schema %s" typ schema)))))
           types (.getTypes schema)]
       (case (count types)
-        0 (transform-composed schema)
+        0 (if (empty-schema? schema)
+            any?
+            (transform-composed schema))
         1 (-> types first pred)
         (into [:or] (map pred types)))))
 

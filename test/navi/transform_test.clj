@@ -88,7 +88,9 @@
   (testing "binary"
     (is (= any? (p/transform (BinarySchema.)))))
   (testing "nil"
-    (is (= any? (p/transform nil)))))
+    (is (= any? (p/transform nil))))
+  (testing "empty schema"
+    (is (= any? (p/transform (JsonSchema.))))))
 
 (deftest date-schema-transformations
   (testing "DateSchema transforms to inst? predicate"
